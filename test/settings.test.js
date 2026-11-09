@@ -61,6 +61,11 @@ test('velocidade em px/s cresce com a velocidade e com o tamanho da fonte', () =
   assert.equal(pixelsPerSecond({ speed: 10, fontSize: 100, lineHeight: 1.4 }), base * 2);
 });
 
+test('manter a tela acesa vem ligado por padrão', () => {
+  assert.equal(DEFAULT_SETTINGS.keepAwake, true);
+  assert.equal(sanitizeSettings({ keepAwake: false }).keepAwake, false);
+});
+
 test('formatDuration', () => {
   assert.equal(formatDuration(0), '0:00');
   assert.equal(formatDuration(65.4), '1:05');

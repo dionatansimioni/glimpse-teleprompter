@@ -43,6 +43,18 @@ describe('Páginas e arquivos estáticos', () => {
     }
   });
 
+  test('vídeos que mantêm a tela acesa são servidos e pequenos', async () => {
+    for (const [url, type] of [['/media/keep-awake.webm', 'video/webm'], ['/media/keep-awake.mp4', 'video/mp4']]) {
+      const res = await srv.request(url);
+      assert.equal(res.status, 200, url);
+      assert.equal(res.headers.get('content-type'), type);
+      const size = (await res.arrayBuffer()).byteLength;
+      assert.ok(size > 500 && size < 50_000, `${url}: ${size} bytes`);
+    }
+    const reader = await fs.readFile(path.join(PUBLIC, 'js', 'reader.js'), 'utf8');
+    assert.ok(reader.includes('/media/keep-awake.webm') && reader.includes('/media/keep-awake.mp4'));
+  });
+
   test('todo import dos módulos do navegador aponta para um arquivo existente', async () => {
     const files = (await fs.readdir(path.join(PUBLIC, 'js'))).filter((f) => f.endsWith('.js'));
     for (const file of files) {

@@ -10,3 +10,13 @@ e2e
 test-results
 playwright-report
 playwright.config.js
+.env.*
+!.env.example
+auth.json
+.session-secret
+*.pem
+*.key
+scripts
+.nvmrc
+.vscode
+.idea

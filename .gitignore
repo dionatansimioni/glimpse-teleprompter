@@ -4,3 +4,21 @@ data/
 *.log
 test-results/
 playwright-report/
+
+# Dados e segredos locais: nunca devem ir para o repositório
+auth.json
+.session-secret
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# Ferramentas e sistema
+coverage/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

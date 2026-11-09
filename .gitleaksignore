@@ -1,0 +1,2 @@
+# Falso positivo: nome da chave do localStorage com os atalhos (não é segredo).
+af21447d722bcc82e3ee0373cde643a8145ad1d0:public/js/keys.js:generic-api-key:3

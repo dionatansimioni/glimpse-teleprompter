@@ -24,6 +24,17 @@ body.reader.theme-light  {
 }
 body.reader.playing { cursor: none; }
 
+/* Vídeo invisível que mantém a tela acesa sem HTTPS (ver js/wake.js). */
+.keep-awake {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .01;
+  pointer-events: none;
+}
+
 /* ---------- Palco ---------- */
 .stage {
   position: absolute;

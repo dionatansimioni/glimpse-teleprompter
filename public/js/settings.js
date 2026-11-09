@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   showGuide: true,
   guidePos: 30,
   mediaKeys: false,
+  keepAwake: true,
 });
 
 const NUMBER_RANGES = {

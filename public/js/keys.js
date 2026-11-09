@@ -1,6 +1,6 @@
 // Atalhos de teclado / controles Bluetooth / gamepad. Módulo sem DOM: testável no Node.
 
-export const KEYS_STORAGE = 'glimpse.keys.v1';
+export const KEYS_STORAGE = 'glimpse.keys.v1'; // gitleaks:allow (nome de chave do localStorage, não é segredo)
 
 export const ACTIONS = [
   { id: 'togglePlay', label: 'Reproduzir / pausar', keys: ['Space', 'Enter', 'NumpadEnter', 'MediaPlayPause', 'KeyK'] },

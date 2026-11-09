@@ -8,6 +8,7 @@ import {
   gamepadButtonBinding, gamepadAxisBinding, bindingLabel, findAction,
   assignBinding, removeBinding, isRepeatable, actionLabel,
 } from './keys.js';
+import { createScreenWake, wakeStatusText } from './wake.js';
 
 const $ = (id) => document.getElementById(id);
 const body = document.body;
@@ -207,6 +208,7 @@ function applySettings() {
   syncForm();
   measure();
   setMediaKeys(settings.mediaKeys);
+  syncKeepAwake();
 }
 
 function syncForm() {
@@ -263,18 +265,54 @@ function toggleFullscreen() {
 }
 
 // ---------- Manter a tela acesa ----------
-let wakeLock = null;
-async function requestWakeLock() {
-  if (!('wakeLock' in navigator) || wakeLock || document.visibilityState !== 'visible') return;
-  try {
-    wakeLock = await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release', () => { wakeLock = null; });
-  } catch {
-    /* exige HTTPS ou não suportado */
+// Vídeo invisível, silencioso e em loop: usado quando a Wake Lock API não
+// está disponível (acesso por HTTP). Fica atrás do texto, cobrindo a tela,
+// porque alguns navegadores ignoram vídeos minúsculos ou fora da área visível.
+function createKeepAwakeVideo() {
+  const video = document.createElement('video');
+  video.className = 'keep-awake';
+  video.loop = true;
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('aria-hidden', 'true');
+  video.disablePictureInPicture = true;
+  video.disableRemotePlayback = true;
+  video.preload = 'auto';
+  video.tabIndex = -1;
+  for (const [src, type] of [['/media/keep-awake.webm', 'video/webm'], ['/media/keep-awake.mp4', 'video/mp4']]) {
+    const source = document.createElement('source');
+    source.src = src;
+    source.type = type;
+    video.append(source);
   }
+  document.body.prepend(video);
+  return video;
 }
+
+const wake = createScreenWake({
+  createVideo: createKeepAwakeVideo,
+  onChange: (mode) => {
+    body.dataset.wake = mode;
+    $('wake-status').textContent = wakeStatusText(mode, settings.keepAwake);
+  },
+});
+
+let keepAwakeApplied = null;
+function syncKeepAwake() {
+  if (settings.keepAwake === keepAwakeApplied) return;
+  keepAwakeApplied = settings.keepAwake;
+  if (settings.keepAwake) wake.enable();
+  else wake.disable();
+  $('wake-status').textContent = wakeStatusText(wake.mode, settings.keepAwake);
+}
+
+// Vídeo com som só pode começar após um gesto: cada toque/tecla tenta de novo.
+for (const type of ['pointerdown', 'keydown', 'click']) {
+  document.addEventListener(type, () => { wake.refresh(); }, { capture: true, passive: true });
+}
+
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') requestWakeLock();
+  if (document.visibilityState === 'visible') wake.refresh();
   else if (playing) pause();
 });
 
@@ -597,7 +635,6 @@ async function init() {
     text.textContent = err.message;
   }
   measure();
-  requestWakeLock();
 }
 
 init();

@@ -101,7 +101,8 @@ Todos podem ser alterados em ⚙ → **Atalhos e controles**: clique em **+** e 
 
 ### Observações sobre o celular
 
-- **Manter a tela acesa** (Wake Lock) e a tela cheia funcionam melhor com **HTTPS**. Na rede local por HTTP, o Glimpse funciona normalmente, mas o celular pode apagar a tela sozinho. Coloque um proxy reverso com HTTPS (Caddy, Traefik, Nginx Proxy Manager, Tailscale Serve etc.) e use `COOKIE_SECURE=true`.
+- **A tela não apaga durante a leitura** (opção *Manter a tela acesa*, ligada por padrão). Com HTTPS o Glimpse usa a Wake Lock API do navegador. Acessando pelo IP via HTTP essa API não existe, então ele entra no *modo de compatibilidade*: um vídeo invisível e silencioso em loop, que impede o celular ou o PC de apagar a tela. Esse modo começa no primeiro toque na tela ou tecla pressionada; o status aparece em ⚙ → Tela.
+- Para a melhor experiência (Wake Lock e tela cheia sem restrições), use um proxy reverso com HTTPS (Caddy, Traefik, Nginx Proxy Manager, Tailscale Serve etc.) e `COOKIE_SECURE=true`.
 - No iPhone o Safari não oferece tela cheia para páginas; use **Compartilhar → Adicionar à Tela de Início**.
 
 ## Desenvolvimento
@@ -113,7 +114,10 @@ npm install
 npm run dev                      # http://localhost:3000
 npm test                         # testes de API, páginas e módulos
 npm run test:e2e                 # testes no navegador (Playwright, via Docker; versão lida do package.json)
+git config core.hooksPath .githooks   # ativa a verificação de segredos (gitleaks) antes de cada commit
 ```
+
+O CI também roda o [gitleaks](https://github.com/gitleaks/gitleaks) em todo o histórico e não publica a imagem se encontrar tokens, chaves ou senhas. Dados locais (`data/`, `.env`, `auth.json`, certificados) estão no `.gitignore`.
 
 Estrutura:
 
