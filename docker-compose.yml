@@ -1,0 +1,19 @@
+services:
+  glimpse:
+    image: ghcr.io/OWNER/glimpse-teleprompter:latest
+    # Para compilar localmente em vez de baixar a imagem, troque "image" por:
+    # build: .
+    container_name: glimpse
+    restart: unless-stopped
+    ports:
+      - "${GLIMPSE_PORT:-3000}:3000"
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Defina ADMIN_PASSWORD no arquivo .env}
+      PUBLIC_READ: ${PUBLIC_READ:-false}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+    volumes:
+      - glimpse-data:/data
+
+volumes:
+  glimpse-data:

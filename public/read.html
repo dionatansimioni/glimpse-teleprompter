@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Teleprompter · Glimpse</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#000000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/reader.css">
+  <script type="module" src="/js/reader.js"></script>
+</head>
+<body class="reader">
+  <div id="stage" class="stage">
+    <div id="scroller" class="scroller">
+      <article id="text" class="prompt-text md"></article>
+    </div>
+    <div id="guide" class="guide" aria-hidden="true"></div>
+    <div class="fade" aria-hidden="true"></div>
+  </div>
+
+  <div class="progress" aria-hidden="true"><div id="progress-bar"></div></div>
+  <div id="countdown" class="countdown" hidden></div>
+  <div id="speed-flash" class="speed-flash" aria-live="polite"></div>
+
+  <nav id="hud" class="hud" aria-label="Controles">
+    <a class="hud-btn" href="/" title="Voltar à biblioteca" aria-label="Voltar à biblioteca">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <span id="script-title" class="hud-title"></span>
+    <div class="hud-center">
+      <button class="hud-btn" data-action="jumpBack" title="Voltar trecho" aria-label="Voltar trecho">
+        <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+      <button class="hud-btn play" id="btn-play" data-action="togglePlay" title="Reproduzir / pausar" aria-label="Reproduzir">
+        <svg class="i-play" viewBox="0 0 24 24"><path class="fill" d="M8 5v14l11-7z"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24"><path class="fill" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+      </button>
+      <button class="hud-btn" data-action="jumpForward" title="Avançar trecho" aria-label="Avançar trecho">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      </button>
+      <div class="speed-ctrl">
+        <button class="hud-btn small" data-action="speedDown" title="Diminuir velocidade" aria-label="Diminuir velocidade">−</button>
+        <span class="speed-val"><small>vel.</small><b id="speed-val">0</b></span>
+        <button class="hud-btn small" data-action="speedUp" title="Aumentar velocidade" aria-label="Aumentar velocidade">+</button>
+      </div>
+    </div>
+    <span id="time-left" class="time-left" title="Tempo restante estimado"></span>
+    <button class="hud-btn" data-action="fullscreen" id="btn-fs" title="Tela cheia" aria-label="Tela cheia">
+      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+    <button class="hud-btn" data-action="settings" title="Configurações" aria-label="Configurações">
+      <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
+  </nav>
+
+  <aside id="panel" class="panel" hidden aria-label="Configurações">
+    <header class="panel-head">
+      <h2>Configurações</h2>
+      <button class="ghost" id="panel-close" aria-label="Fechar">✕</button>
+    </header>
+
+    <div class="panel-body">
+      <section>
+        <h3>Rolagem</h3>
+        <label class="field">
+          <span>Velocidade <output data-for="speed"></output></span>
+          <input type="range" data-setting="speed" min="1" max="60" step="1">
+        </label>
+        <label class="field">
+          <span>Direção</span>
+          <select data-setting="direction">
+            <option value="up">Texto sobe (normal)</option>
+            <option value="down">Texto desce (invertido)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Linhas por salto <output data-for="jumpLines"></output></span>
+          <input type="range" data-setting="jumpLines" min="1" max="15" step="1">
+        </label>
+        <label class="field">
+          <span>Contagem regressiva <output data-for="countdown" data-unit="s"></output></span>
+          <input type="range" data-setting="countdown" min="0" max="10" step="1">
+        </label>
+      </section>
+
+      <section>
+        <h3>Texto</h3>
+        <label class="field">
+          <span>Tamanho <output data-for="fontSize" data-unit="px"></output></span>
+          <input type="range" data-setting="fontSize" min="16" max="200" step="2">
+        </label>
+        <label class="field">
+          <span>Espaçamento entre linhas <output data-for="lineHeight"></output></span>
+          <input type="range" data-setting="lineHeight" min="1" max="2.4" step="0.05">
+        </label>
+        <label class="field">
+          <span>Margens laterais <output data-for="margin" data-unit="%"></output></span>
+          <input type="range" data-setting="margin" min="0" max="35" step="1">
+        </label>
+        <label class="field">
+          <span>Alinhamento</span>
+          <select data-setting="align">
+            <option value="left">Esquerda</option>
+            <option value="center">Centro</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Fonte</span>
+          <select data-setting="font">
+            <option value="sans">Sem serifa</option>
+            <option value="serif">Serifada</option>
+            <option value="mono">Monoespaçada</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Cores</span>
+          <select data-setting="theme">
+            <option value="dark">Branco no preto</option>
+            <option value="yellow">Amarelo no preto</option>
+            <option value="green">Verde no preto</option>
+            <option value="light">Preto no branco</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" data-setting="uppercase"> Texto em maiúsculas</label>
+      </section>
+
+      <section>
+        <h3>Tela</h3>
+        <label class="check"><input type="checkbox" data-setting="mirrorX"> Espelhar horizontalmente</label>
+        <label class="check"><input type="checkbox" data-setting="mirrorY"> Espelhar verticalmente</label>
+        <label class="check"><input type="checkbox" data-setting="showGuide"> Mostrar guia de leitura</label>
+        <label class="field">
+          <span>Posição da guia <output data-for="guidePos" data-unit="%"></output></span>
+          <input type="range" data-setting="guidePos" min="5" max="80" step="1">
+        </label>
+        <label class="check"><input type="checkbox" data-setting="mediaKeys"> Capturar botões de mídia (controles Bluetooth)</label>
+        <p class="note">
+          Muitos controles Bluetooth enviam comandos de mídia (play/pause, próxima, anterior).
+          Com esta opção, o Glimpse toca um áudio silencioso para receber esses comandos.
+          Ative e depois toque em reproduzir uma vez.
+        </p>
+      </section>
+
+      <section>
+        <h3>Atalhos e controles</h3>
+        <p class="note">
+          Clique em <b>+</b> e pressione uma tecla do teclado, do controle Bluetooth ou um botão de gamepad.
+          As configurações ficam salvas neste dispositivo.
+        </p>
+        <div id="bindings" class="bindings"></div>
+        <button id="reset-keys">Restaurar atalhos padrão</button>
+      </section>
+
+      <section>
+        <button id="reset-settings" class="danger">Restaurar configurações padrão</button>
+      </section>
+    </div>
+  </aside>
+
+  <div id="capture" class="capture" hidden>
+    <div>
+      <p>Pressione a tecla ou botão para<br><b id="capture-action"></b></p>
+      <button id="capture-cancel">Cancelar</button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Glimpse</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#121211">
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/login.js"></script>
+</head>
+<body>
+  <main class="login">
+    <form id="login-form">
+      <h1><img src="/icon.svg" alt=""> Glimpse Teleprompter</h1>
+      <p>Entre com a senha de administrador.</p>
+      <input type="password" id="password" name="password" placeholder="Senha" autocomplete="current-password" required autofocus>
+      <button type="submit" class="primary">Entrar</button>
+      <div class="error" id="error" role="alert"></div>
+    </form>
+  </main>
+</body>
+</html>

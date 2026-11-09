@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glimpse Teleprompter</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#121211">
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/library.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><img src="/icon.svg" alt=""> Glimpse</a>
+    <div class="spacer"></div>
+    <a class="button ghost" id="login-link" href="/login" hidden>Entrar</a>
+    <button class="ghost" id="logout" hidden>Sair</button>
+  </header>
+
+  <main class="container">
+    <!-- Lista de roteiros (staging) -->
+    <section id="list-view" hidden>
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Buscar roteiros…" aria-label="Buscar roteiros">
+        <button id="new-script" class="primary admin-only">Novo roteiro</button>
+        <label class="button admin-only">
+          Importar .md
+          <input type="file" id="import" accept=".md,.markdown,.txt,text/markdown,text/plain" multiple hidden>
+        </label>
+      </div>
+      <ul id="scripts" class="script-list"></ul>
+      <div id="empty" class="empty" hidden></div>
+    </section>
+
+    <!-- Editor -->
+    <section id="editor-view" hidden>
+      <div class="toolbar">
+        <a class="button ghost" href="#/">← Voltar</a>
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tab-edit" aria-selected="true">Editar</button>
+          <button role="tab" id="tab-preview" aria-selected="false">Visualizar</button>
+        </div>
+        <div class="spacer"></div>
+        <span class="status" id="status"></span>
+        <a class="button" id="read-link" hidden>Abrir no teleprompter</a>
+        <button class="primary" id="save">Salvar</button>
+      </div>
+      <input type="text" id="title" class="title-input" placeholder="Título do roteiro" maxlength="200" aria-label="Título">
+      <textarea id="content" class="editor-area" placeholder="Escreva ou cole o roteiro em Markdown…" aria-label="Roteiro"></textarea>
+      <article id="preview" class="preview md" hidden></article>
+      <p class="hint">
+        Markdown: <code># Seção</code> <code>**negrito**</code> <code>*itálico*</code>
+        <code>==destaque==</code> <code>&gt; nota de direção</code> <code>---</code> separador.
+        Atalho: <code>Ctrl+S</code> salva.
+      </p>
+    </section>
+  </main>
+
+  <div id="drop-hint" class="drop-hint" hidden>Solte os arquivos .md para importar</div>
+</body>
+</html>
