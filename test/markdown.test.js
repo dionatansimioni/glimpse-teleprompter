@@ -31,4 +31,5 @@ test('contagem de palavras ignora marcação Markdown', () => {
   assert.equal(countWords('# Título\n\n**Olá** _mundo_ > nota'), 4);
   assert.equal(countWords('---\ntitle: x\n---\num dois'), 2);
   assert.equal(countWords(''), 0);
+  assert.equal(countWords('Primeiro roteiro .  …  — !'), 2, 'pontuação solta não conta');
 });

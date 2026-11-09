@@ -6,3 +6,7 @@ test
 .env
 *.md
 !README.md
+e2e
+test-results
+playwright-report
+playwright.config.js

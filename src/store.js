@@ -10,7 +10,7 @@ export function countWords(text) {
     .replace(/^---\n[\s\S]*?\n---\n?/, '')
     .replace(/[#>*_`~\-=|[\]()]/g, ' ')
     .split(/\s+/)
-    .filter(Boolean).length;
+    .filter((word) => /[\p{L}\p{N}]/u.test(word)).length;
 }
 
 export async function createStore(dataDir) {

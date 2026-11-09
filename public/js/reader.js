@@ -463,7 +463,11 @@ stage.addEventListener('pointerdown', (e) => {
   if (e.button !== 0) return;
   ensureMediaAudio();
   drag = { id: e.pointerId, y: e.clientY, pos, moved: false };
-  stage.setPointerCapture(e.pointerId);
+  try {
+    stage.setPointerCapture(e.pointerId);
+  } catch {
+    /* ponteiro já liberado */
+  }
 });
 
 stage.addEventListener('pointermove', (e) => {

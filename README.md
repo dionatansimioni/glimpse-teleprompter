@@ -100,6 +100,7 @@ Requer Node.js 20 ou superior.
 npm install
 ADMIN_PASSWORD=dev npm run dev   # http://localhost:3000
 npm test                         # testes de API, páginas e módulos
+npm run test:e2e                 # testes no navegador (Playwright, via Docker)
 ```
 
 Estrutura:
@@ -110,7 +111,8 @@ public/         interface (HTML/CSS/JS puro, sem build)
   js/reader.js  teleprompter
   js/keys.js    atalhos (teclado, Bluetooth, gamepad)
   js/settings.js configurações de leitura
-test/           testes (node:test)
+test/           testes unitários e de API (node:test)
+e2e/            testes no navegador, desktop e celular (Playwright)
 ```
 
 A cada push na `main` o GitHub Actions roda os testes e publica a imagem em `ghcr.io/<owner>/<repo>:latest`. Tags `vX.Y.Z` geram as imagens versionadas `X.Y.Z` e `X.Y`. Na primeira publicação, deixe o pacote público em **GitHub → Packages → glimpse-teleprompter → Package settings → Change visibility**.
