@@ -11,6 +11,16 @@ async function openPhoneReader(browser, doc) {
   return { ctx, phone };
 }
 
+// Escolhe o leitor na lista. Com um único leitor aberto a página já o
+// seleciona sozinha, então espera um dos dois desfechos antes de agir.
+async function chooseReader(laptop, title) {
+  const item = laptop.locator('.reader-item', { hasText: title });
+  const selected = laptop.locator('#control-view:not([hidden]) #target-title', { hasText: title });
+  await expect(item.or(selected)).toBeVisible();
+  if (await item.isVisible()) await item.click();
+  await expect(laptop.locator('#target-title')).toHaveText(title);
+}
+
 const fontSize = (page) => page.locator('#text').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 const scrollOffset = (page) => page.locator('#scroller').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m42);
 
@@ -27,10 +37,7 @@ test.describe('Controle remoto', () => {
       await laptop.click('#menu-remote');
       await expect(laptop).toHaveURL(/\/remote$/);
 
-      // Escolhe o leitor pela lista (ou já abre, se for o único).
-      const item = laptop.locator('.reader-item', { hasText: doc.title });
-      if (await laptop.locator('#list-view').isVisible()) await item.click();
-      await expect(laptop.locator('#target-title')).toHaveText(doc.title);
+      await chooseReader(laptop, doc.title);
       await expect(laptop.locator('#target-meta')).toContainText('Android');
       await expect(laptop.locator('#target-speed')).toHaveText('12');
       await expect(laptop.locator('#target-font')).toHaveText('48px');
@@ -75,9 +82,7 @@ test.describe('Controle remoto', () => {
     const { ctx, phone } = await openPhoneReader(browser, doc);
     try {
       await laptop.goto('/remote');
-      const item = laptop.locator('.reader-item', { hasText: doc.title });
-      if (await laptop.locator('#list-view').isVisible()) await item.click();
-      await expect(laptop.locator('#target-title')).toHaveText(doc.title);
+      await chooseReader(laptop, doc.title);
 
       await laptop.keyboard.press('Space');
       await expect(phone.locator('body')).toHaveClass(/playing/);
