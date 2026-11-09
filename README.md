@@ -1,16 +1,25 @@
 # Glimpse Teleprompter
 
-Teleprompter web, open source e auto-hospedado. Você sobe seus roteiros em Markdown pelo PC e lê no celular ou tablet pelo navegador, sem instalar nenhum app.
+**English** · [Português](README.pt-BR.md) · [Website](https://dionatansimioni.github.io/glimpse-teleprompter/)
 
-- **Área de staging**: crie, edite, importe (`.md`, arrastar e soltar) e baixe roteiros, cada um com título.
-- **Teleprompter**: velocidade, tamanho do texto, espaçamento, margens, alinhamento, fonte, cores, espelhamento horizontal e vertical, direção da rolagem, guia de leitura, contagem regressiva e tempo restante.
-- **Tela cheia** (e instalável como app pela opção "Adicionar à tela inicial").
-- **Configuração universal**: tamanho do texto, velocidade, espelhamento, atalhos etc. ficam salvos no servidor e valem para todos os roteiros, em qualquer aparelho. Quando precisar, um roteiro pode ter **ajustes próprios** que sobrescrevem só os itens escolhidos.
-- **Atalhos customizáveis**: teclado, controles Bluetooth (teclas, page-turners e botões de mídia) e gamepads.
-- **Toque**: tocar na tela reproduz/pausa e arrastar move o texto.
-- Interface minimalista, sem dependências externas em tempo de execução (funciona numa rede local sem internet).
+Open source, self-hosted web teleprompter. Upload your scripts in Markdown from your computer and read them on your phone or tablet in the browser, with no app to install.
 
-## Rodando com Docker
+<p align="center">
+  <img src="site/assets/screens/en-reader-phone.png" alt="Reader on a phone" width="230">
+  <img src="site/assets/screens/en-library.png" alt="Script library on a computer" width="560">
+</p>
+
+- **Staging area**: create, edit, import (`.md`, drag and drop) and download scripts, each with its own title.
+- **Teleprompter**: speed, text size, line spacing, margins, alignment, font, colors, horizontal and vertical mirroring, scroll direction, reading guide, countdown and time left.
+- **Full screen** (and installable as an app with "Add to Home Screen").
+- **Universal settings**: text size, speed, mirroring, shortcuts and so on are saved on the server and apply to every script, on any device. When needed, a script can have **custom settings** that override only the items you choose.
+- **Customizable shortcuts**: keyboard, Bluetooth remotes (keys, page turners and media buttons) and gamepads.
+- **Touch**: tap the screen to play/pause, drag to move the text.
+- **English and Portuguese**: pick the language on the sign-in screen (and switch it later from the menu).
+- **Screen stays on** while reading, even without HTTPS.
+- Minimal interface with no external runtime dependencies (works on a local network without internet).
+
+## Running with Docker
 
 ```bash
 mkdir glimpse && cd glimpse
@@ -18,11 +27,11 @@ curl -O https://raw.githubusercontent.com/dionatansimioni/glimpse-teleprompter/m
 docker compose up -d
 ```
 
-Acesse `http://IP-DO-SERVIDOR:3000` no navegador. No **primeiro acesso** o Glimpse pede para você criar a senha de administrador (com confirmação). Depois é só entrar com ela no PC, no celular e no tablet.
+Open `http://SERVER-IP:3000` in your browser. On the **first access** Glimpse asks you to create the administrator password (with confirmation). After that, sign in with it on your computer, phone and tablet.
 
-> Faça o setup logo após subir o container: até a senha ser criada, qualquer pessoa que acessar o endereço pode defini-la.
+> Do the setup right after starting the container: until the password is created, anyone who opens the address can set it.
 
-Ou direto com `docker run`:
+Or directly with `docker run`:
 
 ```bash
 docker run -d --name glimpse -p 3000:3000 \
@@ -30,121 +39,135 @@ docker run -d --name glimpse -p 3000:3000 \
   ghcr.io/dionatansimioni/glimpse-teleprompter:latest
 ```
 
-As imagens são publicadas no GitHub Container Registry (`ghcr.io`) para `linux/amd64` e `linux/arm64` (Raspberry Pi 4/5 incluídos).
+Images are published to the GitHub Container Registry (`ghcr.io`) for `linux/amd64` and `linux/arm64` (including Raspberry Pi 4/5).
 
-### Variáveis de ambiente
+### Environment variables
 
-| Variável | Padrão | Descrição |
+| Variable | Default | Description |
 |---|---|---|
-| `PUBLIC_READ` | `false` | `true` permite listar e ler roteiros sem login (editar continua exigindo login). |
-| `COOKIE_SECURE` | `false` | Use `true` quando o acesso for por HTTPS. |
-| `TRUST_PROXY` | *(vazio)* | Número de proxies reversos à frente (ex.: `1`), para identificar o IP real no limite de tentativas de login. |
-| `SESSION_SECRET` | *(gerado)* | Chave das sessões. Se omitida, é gerada e salva em `/data/.session-secret`. |
-| `PORT` | `3000` | Porta interna do servidor. |
-| `DATA_DIR` | `/data` | Onde os roteiros são salvos (um arquivo JSON por roteiro). |
+| `PUBLIC_READ` | `false` | `true` lets anyone list and read scripts without signing in (editing still requires signing in). |
+| `COOKIE_SECURE` | `false` | Use `true` when Glimpse is accessed over HTTPS. |
+| `TRUST_PROXY` | *(empty)* | Number of reverse proxies in front of Glimpse (e.g. `1`), so the sign-in rate limit sees the real client IP. |
+| `SESSION_SECRET` | *(generated)* | Session key. If omitted, it is generated and saved to `/data/.session-secret`. |
+| `PORT` | `3000` | Internal server port. |
+| `DATA_DIR` | `/data` | Where scripts are stored (one JSON file per script). |
 
-Todas são opcionais.
+All of them are optional.
 
-### Senha de administrador
+### Administrator password
 
-- **Criar:** no primeiro acesso, pela tela de configuração inicial.
-- **Alterar:** botão **Alterar senha** no topo da biblioteca (pede a senha atual, a nova e a confirmação). Os outros dispositivos conectados precisam entrar de novo.
-- **Esqueci a senha:** remova-a e reinicie; no próximo acesso a tela de configuração inicial aparece de novo. Os roteiros não são afetados.
+- **Create:** on the first access, on the initial setup screen.
+- **Change:** top-right menu → **Change password** (asks for the current password, the new one and a confirmation). Other connected devices will need to sign in again.
+- **Forgot it:** remove it and restart; the initial setup screen shows up again on the next access. Scripts are not affected.
 
   ```bash
   docker compose exec glimpse node src/reset-password.js
   docker compose restart glimpse
   ```
 
-A senha é guardada apenas como hash (scrypt) em `/data/auth.json`. As sessões duram 30 dias.
+The password is stored only as a hash (scrypt) in `/data/auth.json`. Sessions last 30 days.
 
-## Fluxo de uso
+## How to use
 
-1. No PC, entre em `http://servidor:3000`, faça login (ou crie a senha, no primeiro acesso) e clique em **Novo roteiro** ou **Importar .md** (ou arraste arquivos para a página).
-2. No celular ou tablet, abra o mesmo endereço, faça login e toque em **Ler**.
-3. Toque em ⚙ para ajustar texto, velocidade, espelhamento e atalhos. Use o botão de tela cheia ou adicione o Glimpse à tela inicial.
+1. On your computer, open `http://server:3000`, sign in (or create the password on the first access) and click **New script** or **Import .md** (or drag files onto the page).
+2. On your phone or tablet, open the same address, sign in and tap **Read**.
+3. Tap ⚙ to adjust text, speed, mirroring and shortcuts. Use the full screen button or add Glimpse to your home screen.
 
-### Configuração geral x ajustes de um roteiro
+### Menu and language
 
-No painel ⚙ do leitor, escolha onde as alterações são gravadas:
+The menu in the top-right corner of the library has **Teleprompter settings** (the general settings and shortcuts, without opening a script), **Language** (Português / English), **Change password** and **Sign out**. The language is also chosen on the sign-in screen and is remembered on each device; if you never choose one, Glimpse follows the browser language.
 
-- **Todos os roteiros** (padrão): muda a configuração geral, que vale para todos os roteiros e aparelhos.
-- **Só este roteiro**: cria ajustes próprios do roteiro aberto, que sobrescrevem a configuração geral apenas nos itens alterados (marcados com ●). O resto continua seguindo a geral.
+### General settings vs. a script's custom settings
 
-Cada item sobrescrito tem o botão **usar geral**, e **Remover ajustes deste roteiro** apaga todos de uma vez. Na biblioteca, roteiros com ajustes aparecem com a indicação *ajustes próprios*. *Manter a tela acesa*, *Capturar botões de mídia* e os atalhos são sempre gerais.
+<img src="site/assets/screens/en-panel-phone.png" alt="Reader settings panel" width="230" align="right">
 
-As configurações ficam em `/data/settings.json` e os ajustes dentro do arquivo de cada roteiro. Configurações salvas no navegador por versões anteriores são migradas automaticamente para o servidor.
+In the reader's ⚙ panel, choose where changes are saved:
 
-O título do roteiro importado vem do front matter (`title: ...`), do primeiro `# Título` ou do nome do arquivo.
+- **All scripts** (default): changes the general settings, which apply to every script and device.
+- **This script only**: creates custom settings for the open script, overriding the general settings only for the items you change (marked with ●). Everything else keeps following the general settings.
 
-### Markdown suportado
+Each overridden item has a **use general** button, and **Remove this script’s custom settings** clears all of them at once. In the library, scripts with custom settings are labeled *custom settings*. *Keep the screen on*, *Capture media buttons* and shortcuts are always general.
+
+Settings live in `/data/settings.json`, and custom settings inside each script's file. Settings saved in the browser by earlier versions are migrated to the server automatically.
+
+The title of an imported script comes from the front matter (`title: ...`), from the first `# Title`, or from the file name.
+
+### Supported Markdown
 
 ```markdown
-# Seção (aparece destacada; use , e . para pular entre seções)
-Texto normal, **ênfase**, *itálico* e ==destaque==.
-> Nota de direção: aparece menor e esmaecida (ex.: "mostrar o terminal").
+# Section (highlighted; use , and . to jump between sections)
+Regular text, **emphasis**, *italic* and ==highlight==.
+> Stage direction: shown smaller and dimmed (e.g. "show the terminal").
 ---
 ```
 
-## Atalhos padrão
+## Default shortcuts
 
-| Ação | Teclas |
+| Action | Keys |
 |---|---|
-| Reproduzir / pausar | `Espaço`, `Enter`, `K`, botão de mídia ⏯ |
-| Velocidade − / + | `←` / `→`, `-` / `=` |
-| Voltar / avançar trecho | `↑` / `↓`, `Page Up` / `Page Down`, mídia ⏮ / ⏭ |
-| Seção anterior / próxima | `,` / `.` |
-| Início / fim | `Home` / `End` |
-| Texto menor / maior | `[` / `]` |
-| Espelhar horizontal / vertical | `M` / `V` |
-| Inverter direção | `R` |
-| Tela cheia | `F` |
-| Mostrar / esconder controles | `H` |
-| Configurações | `S` |
+| Play / pause | `Space`, `Enter`, `K`, media button ⏯ |
+| Speed − / + | `←` / `→`, `-` / `=` |
+| Jump back / forward | `↑` / `↓`, `Page Up` / `Page Down`, media ⏮ / ⏭ |
+| Previous / next section | `,` / `.` |
+| Start / end | `Home` / `End` |
+| Smaller / larger text | `[` / `]` |
+| Mirror horizontally / vertically | `M` / `V` |
+| Reverse direction | `R` |
+| Full screen | `F` |
+| Show / hide controls | `H` |
+| Settings | `S` |
 
-Todos podem ser alterados em ⚙ → **Atalhos e controles**: clique em **+** e pressione a tecla ou o botão do controle.
+All of them can be changed in ⚙ → **Shortcuts and controllers** (in the reader) or in **Teleprompter settings** (in the menu): click **+** and press the key or controller button.
 
-### Controles Bluetooth
+### Bluetooth remotes
 
-- **Page-turners e mini-teclados** (enviam setas, Page Up/Down, Enter, Espaço): funcionam direto ou após mapear em **+**.
-- **Controles de mídia / controles de selfie**: ative **Capturar botões de mídia** nas configurações e toque em reproduzir uma vez. O Glimpse toca um áudio silencioso para receber play/pause, próxima e anterior pela Media Session do navegador.
-- **Gamepads**: aperte qualquer botão com a página aberta para o navegador detectar o controle e então mapeie os botões em **+**.
-- Os botões de **volume** do Android não chegam ao navegador, por limitação do sistema.
+- **Page turners and mini keyboards** (send arrows, Page Up/Down, Enter, Space): work out of the box or after mapping them with **+**.
+- **Media remotes / selfie remotes**: turn on **Capture media buttons** in the settings and press play once. Glimpse plays a silent audio track to receive play/pause, next and previous through the browser's Media Session.
+- **Gamepads**: press any button with the page open so the browser detects the controller, then map its buttons with **+**.
+- Android **volume** buttons never reach the browser; this is a system limitation.
 
-### Observações sobre o celular
+### Phone notes
 
-- **A tela não apaga durante a leitura** (opção *Manter a tela acesa*, ligada por padrão). Com HTTPS o Glimpse usa a Wake Lock API do navegador. Acessando pelo IP via HTTP essa API não existe, então ele entra no *modo de compatibilidade*: um vídeo invisível e silencioso em loop, que impede o celular ou o PC de apagar a tela. Esse modo começa no primeiro toque na tela ou tecla pressionada; o status aparece em ⚙ → Tela.
-- Para a melhor experiência (Wake Lock e tela cheia sem restrições), use um proxy reverso com HTTPS (Caddy, Traefik, Nginx Proxy Manager, Tailscale Serve etc.) e `COOKIE_SECURE=true`.
-- No iPhone o Safari não oferece tela cheia para páginas; use **Compartilhar → Adicionar à Tela de Início**.
+- **The screen does not turn off while reading** (*Keep the screen on*, enabled by default). Over HTTPS Glimpse uses the browser's Wake Lock API. When you open it by IP over plain HTTP that API does not exist, so Glimpse switches to *compatibility mode*: an invisible, silent looping video that keeps the phone or computer screen on. This mode starts on the first tap or key press; its status is shown in ⚙ → Screen.
+- For the best experience (Wake Lock and unrestricted full screen), put Glimpse behind a reverse proxy with HTTPS (Caddy, Traefik, Nginx Proxy Manager, Tailscale Serve, etc.) and set `COOKIE_SECURE=true`.
+- On iPhone, Safari does not offer full screen for web pages; use **Share → Add to Home Screen**.
 
-## Desenvolvimento
+## Development
 
-Requer Node.js 20 ou superior.
+Requires Node.js 20 or newer.
 
 ```bash
 npm install
 npm run dev                      # http://localhost:3000
-npm test                         # testes de API, páginas e módulos
-npm run test:e2e                 # testes no navegador (Playwright, via Docker; versão lida do package.json)
-git config core.hooksPath .githooks   # ativa a verificação de segredos (gitleaks) antes de cada commit
+npm test                         # API, page and module tests
+npm run test:e2e                 # browser tests (Playwright via Docker; version read from package.json)
+npm run screenshots              # regenerates the website screenshots (pt and en)
+git config core.hooksPath .githooks   # enables the secret scan (gitleaks) before each commit
 ```
 
-O CI também roda o [gitleaks](https://github.com/gitleaks/gitleaks) em todo o histórico e não publica a imagem se encontrar tokens, chaves ou senhas. Dados locais (`data/`, `.env`, `auth.json`, certificados) estão no `.gitignore`.
+CI also runs [gitleaks](https://github.com/gitleaks/gitleaks) on the whole history and does not publish the image if it finds tokens, keys or passwords. Local data (`data/`, `.env`, `auth.json`, certificates) is in `.gitignore`.
 
-Estrutura:
+Layout:
 
 ```
-src/            servidor (Express): API, autenticação e armazenamento
-public/         interface (HTML/CSS/JS puro, sem build)
+src/            server (Express): API, authentication and storage
+public/         interface (plain HTML/CSS/JS, no build step)
   js/reader.js  teleprompter
-  js/keys.js    atalhos (teclado, Bluetooth, gamepad)
-  js/settings.js configurações de leitura
-test/           testes unitários e de API (node:test)
-e2e/            testes no navegador, desktop e celular (Playwright)
+  js/keys.js    shortcuts (keyboard, Bluetooth, gamepad)
+  js/settings.js reading settings
+  js/i18n.js    languages (js/locales/pt.js and en.js)
+site/           project website (GitHub Pages)
+scripts/        e2e tests and screenshots via Docker
+test/           unit and API tests (node:test)
+e2e/            browser tests, desktop and phone (Playwright)
 ```
 
-A cada push na `main` o GitHub Actions roda os testes e publica a imagem em `ghcr.io/<owner>/<repo>:latest`. Tags `vX.Y.Z` geram as imagens versionadas `X.Y.Z` e `X.Y`. Na primeira publicação, deixe o pacote público em **GitHub → Packages → glimpse-teleprompter → Package settings → Change visibility**.
+Every push to `main` runs the tests on GitHub Actions and publishes the image to `ghcr.io/dionatansimioni/glimpse-teleprompter:latest`. `vX.Y.Z` tags produce versioned `X.Y.Z` and `X.Y` images. The website in `site/` is published to GitHub Pages.
 
-## Licença
+### Translations
+
+Strings live in `public/js/locales/pt.js` and `en.js` (same keys in both). The tests check that every key exists in both languages with the same parameters, and that every key used in the HTML and JavaScript exists.
+
+## License
 
 [MIT](LICENSE)
