@@ -22,7 +22,7 @@ describe('API de roteiros', () => {
 
   test('sessão informa que não está autenticado', async () => {
     const res = await srv.request('/api/session');
-    assert.deepEqual(await res.json(), { authenticated: false, publicRead: false });
+    assert.deepEqual(await res.json(), { configured: true, authenticated: false, publicRead: false });
   });
 
   test('senha errada é recusada', async () => {
@@ -169,17 +169,16 @@ describe('Modo PUBLIC_READ', () => {
 });
 
 describe('Sessões', () => {
-  test('trocar a senha invalida sessões antigas', async () => {
-    const a = await startServer({ sessionSecret: 'segredo' });
+  test('sessão continua válida após reiniciar o servidor', async () => {
+    const a = await startServer();
     await a.login();
-    const cookie = (await a.request('/api/login', { method: 'POST', body: { password: 'senha-de-teste' } }))
-      .headers.get('set-cookie').split(';')[0];
-    await a.close();
+    const cookie = a.getCookie();
+    await a.close({ keepData: true });
 
-    const b = await startServer({ sessionSecret: 'segredo', adminPassword: 'outra-senha' });
+    const b = await startServer({ dataDir: a.dataDir, configure: false });
     try {
-      const res = await b.request('/api/scripts', { auth: false, headers: { cookie } });
-      assert.equal(res.status, 401);
+      const session = await (await b.request('/api/session', { auth: false, headers: { cookie } })).json();
+      assert.deepEqual(session, { configured: true, authenticated: true, publicRead: false });
     } finally {
       await b.close();
     }

@@ -15,15 +15,12 @@ function parseTrustProxy(value) {
   return /^\d+$/.test(value) ? Number(value) : value;
 }
 
-const adminPassword = readSecret('ADMIN_PASSWORD');
-if (!adminPassword) {
-  console.error('Erro: defina a variável ADMIN_PASSWORD (ou ADMIN_PASSWORD_FILE) com a senha do administrador.');
-  process.exit(1);
+if (env.ADMIN_PASSWORD) {
+  console.warn('Aviso: ADMIN_PASSWORD é ignorada. A senha é definida no primeiro acesso pela interface.');
 }
 
 const app = await createApp({
   dataDir: env.DATA_DIR || './data',
-  adminPassword,
   sessionSecret: readSecret('SESSION_SECRET'),
   publicRead: bool(env.PUBLIC_READ),
   cookieSecure: bool(env.COOKIE_SECURE),
@@ -33,6 +30,9 @@ const app = await createApp({
 const port = Number(env.PORT) || 3000;
 const server = app.listen(port, () => {
   console.log(`Glimpse Teleprompter rodando em http://0.0.0.0:${port}`);
+  if (!app.locals.configured()) {
+    console.log('Primeiro acesso: abra o endereço acima no navegador para definir a senha de administrador.');
+  }
 });
 
 for (const signal of ['SIGINT', 'SIGTERM']) {

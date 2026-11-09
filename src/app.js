@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createAuth } from './auth.js';
+import { AuthError, createAuth } from './auth.js';
 import { createStore } from './store.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -58,17 +58,17 @@ function securityHeaders(req, res, next) {
 
 export async function createApp({
   dataDir,
-  adminPassword,
   sessionSecret,
   publicRead = false,
   cookieSecure = false,
   trustProxy = false,
 }) {
   const store = await createStore(dataDir);
-  const auth = await createAuth({ dataDir, adminPassword, sessionSecret, cookieSecure });
+  const auth = await createAuth({ dataDir, sessionSecret, cookieSecure });
 
   const app = express();
   app.disable('x-powered-by');
+  app.locals.configured = auth.isConfigured;
   app.set('trust proxy', trustProxy);
   app.use(securityHeaders);
 
@@ -91,14 +91,38 @@ export async function createApp({
   const requireReader = (req, res, next) => (publicRead ? next() : requireAdmin(req, res, next));
 
   api.get('/session', (req, res) => {
-    res.json({ authenticated: auth.isAuthenticated(req), publicRead });
+    res.json({
+      configured: auth.isConfigured(),
+      authenticated: auth.isAuthenticated(req),
+      publicRead,
+    });
   });
 
-  api.post('/login', (req, res) => {
+  // Setup inicial: define a senha de administrador no primeiro acesso.
+  api.post('/setup', async (req, res) => {
+    await auth.setup(req.body?.password, req.body?.confirm);
+    auth.startSession(res);
+    res.status(201).json({ configured: true, authenticated: true });
+  });
+
+  api.post('/login', async (req, res) => {
+    if (!auth.isConfigured()) throw new HttpError(409, 'Defina a senha de administrador primeiro.');
     if (!auth.allowAttempt(req.ip)) {
       throw new HttpError(429, 'Muitas tentativas. Aguarde alguns minutos.');
     }
-    if (!auth.checkPassword(req.body?.password)) throw new HttpError(401, 'Senha incorreta.');
+    if (!(await auth.checkPassword(req.body?.password))) throw new HttpError(401, 'Senha incorreta.');
+    auth.clearAttempts(req.ip);
+    auth.startSession(res);
+    res.json({ authenticated: true });
+  });
+
+  // Troca de senha: encerra todas as sessões e abre uma nova para quem trocou.
+  api.post('/password', requireAdmin, async (req, res) => {
+    if (!auth.allowAttempt(req.ip)) {
+      throw new HttpError(429, 'Muitas tentativas. Aguarde alguns minutos.');
+    }
+    const { current, password, confirm } = req.body ?? {};
+    await auth.changePassword(current, password, confirm);
     auth.clearAttempts(req.ip);
     auth.startSession(res);
     res.json({ authenticated: true });
@@ -149,7 +173,7 @@ export async function createApp({
     const status = err.status || err.statusCode || 500;
     if (status >= 500) console.error(err);
     const message =
-      err instanceof HttpError ? err.message
+      err instanceof HttpError || err instanceof AuthError ? err.message
       : status === 413 ? 'O roteiro é grande demais.'
       : status === 400 ? 'Requisição inválida.'
       : 'Erro interno do servidor.';

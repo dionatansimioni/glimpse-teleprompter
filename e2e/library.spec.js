@@ -1,4 +1,4 @@
-import { test, expect, ADMIN_PASSWORD } from './fixtures.js';
+import { test, expect, E2E_PASSWORD } from './fixtures.js';
 
 test('redireciona para o login e entra com a senha', async ({ page }) => {
   await page.goto('/');
@@ -6,7 +6,7 @@ test('redireciona para o login e entra com a senha', async ({ page }) => {
   await page.fill('#password', 'errada');
   await page.click('button[type=submit]');
   await expect(page.locator('#error')).toHaveText('Senha incorreta.');
-  await page.fill('#password', ADMIN_PASSWORD);
+  await page.fill('#password', E2E_PASSWORD);
   await page.click('button[type=submit]');
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('#new-script')).toBeVisible();
@@ -74,4 +74,34 @@ test('busca filtra a lista', async ({ adminPage: page, createScript }) => {
   await page.fill('#search', `alfa ${id}`);
   await expect(page.locator('.script', { hasText: `Alfa ${id}` })).toBeVisible();
   await expect(page.locator('.script', { hasText: `Beta ${id}` })).toHaveCount(0);
+});
+
+test('altera a senha pelo diálogo e volta para a original', async ({ adminPage: page }) => {
+  await page.goto('/');
+  const open = () => page.click('#change-password');
+  const fill = async (current, password, confirm = password) => {
+    await page.fill('#pw-current', current);
+    await page.fill('#pw-new', password);
+    await page.fill('#pw-confirm', confirm);
+    await page.click('#password-form button[type=submit]');
+  };
+
+  await open();
+  await expect(page.locator('#password-dialog')).toBeVisible();
+  await fill(E2E_PASSWORD, 'nova-senha-456', 'diferente-456');
+  await expect(page.locator('#password-error')).toHaveText('A confirmação não confere com a senha.');
+  await fill('senha-errada', 'nova-senha-456');
+  await expect(page.locator('#password-error')).toHaveText('A senha atual está incorreta.');
+  await fill(E2E_PASSWORD, 'nova-senha-456');
+  await expect(page.locator('#password-dialog')).toBeHidden();
+  await expect(page.locator('.toast')).toContainText('Senha alterada');
+
+  // Continua logado e consegue usar a biblioteca.
+  await page.reload();
+  await expect(page.locator('#new-script')).toBeVisible();
+
+  // Restaura a senha original para os demais testes.
+  await open();
+  await fill('nova-senha-456', E2E_PASSWORD);
+  await expect(page.locator('#password-dialog')).toBeHidden();
 });

@@ -1,4 +1,4 @@
-import { api } from './common.js';
+import { api, getSession } from './common.js';
 
 const form = document.getElementById('login-form');
 const error = document.getElementById('error');
@@ -8,6 +8,10 @@ function nextUrl() {
   // Aceita apenas caminhos locais, para não virar um redirecionamento aberto.
   return next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
 }
+
+const session = await getSession();
+if (!session.configured) location.replace('/setup');
+else if (session.authenticated) location.replace(nextUrl());
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();

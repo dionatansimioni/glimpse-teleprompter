@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuração inicial · Glimpse</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#121211">
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/setup.js"></script>
+</head>
+<body>
+  <main class="login">
+    <form id="setup-form" novalidate>
+      <h1><img src="/icon.svg" alt=""> Bem-vindo ao Glimpse</h1>
+      <p>Este é o primeiro acesso. Crie a senha de administrador, que será usada para entrar no PC, no celular e no tablet.</p>
+      <label class="field-label" for="password">Nova senha</label>
+      <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required autofocus>
+      <label class="field-label" for="confirm">Confirme a senha</label>
+      <input type="password" id="confirm" name="confirm" autocomplete="new-password" minlength="8" required>
+      <p class="hint" id="hint">Mínimo de 8 caracteres.</p>
+      <button type="submit" class="primary">Salvar senha e entrar</button>
+      <div class="error" id="error" role="alert"></div>
+    </form>
+  </main>
+</body>
+</html>

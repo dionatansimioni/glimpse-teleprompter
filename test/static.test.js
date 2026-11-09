@@ -17,6 +17,7 @@ describe('Páginas e arquivos estáticos', () => {
   for (const [url, marker] of [
     ['/', 'library.js'],
     ['/login', 'login.js'],
+    ['/setup', 'setup.js'],
     ['/read/qualquer-id', 'reader.js'],
   ]) {
     test(`${url} serve a página certa`, async () => {
@@ -55,7 +56,7 @@ describe('Páginas e arquivos estáticos', () => {
   });
 
   test('todos os assets referenciados no HTML existem', async () => {
-    for (const page of ['index.html', 'login.html', 'read.html']) {
+    for (const page of ['index.html', 'login.html', 'setup.html', 'read.html']) {
       const html = await fs.readFile(path.join(PUBLIC, page), 'utf8');
       for (const [, url] of html.matchAll(/(?:src|href)="(\/[^"#?]+)"/g)) {
         if (url === '/' || url === '/login') continue;
@@ -66,7 +67,7 @@ describe('Páginas e arquivos estáticos', () => {
   });
 
   test('HTML não tem estilos nem scripts inline (bloqueados pela CSP)', async () => {
-    for (const page of ['index.html', 'login.html', 'read.html']) {
+    for (const page of ['index.html', 'login.html', 'setup.html', 'read.html']) {
       const html = await fs.readFile(path.join(PUBLIC, page), 'utf8');
       assert.doesNotMatch(html, /\sstyle="/, page);
       assert.doesNotMatch(html, /<script(?![^>]*\bsrc=)[^>]*>/, page);
@@ -75,7 +76,7 @@ describe('Páginas e arquivos estáticos', () => {
   });
 
   test('IDs usados pelos scripts existem no HTML', async () => {
-    const pairs = [['library.js', 'index.html'], ['login.js', 'login.html'], ['reader.js', 'read.html']];
+    const pairs = [['library.js', 'index.html'], ['login.js', 'login.html'], ['setup.js', 'setup.html'], ['reader.js', 'read.html']];
     for (const [js, page] of pairs) {
       const source = await fs.readFile(path.join(PUBLIC, 'js', js), 'utf8');
       const html = await fs.readFile(path.join(PUBLIC, page), 'utf8');

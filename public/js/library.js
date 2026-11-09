@@ -1,3 +1,4 @@
+import { passwordProblem } from './password-rules.js';
 import {
   api, getSession, goToLogin, extractTitle, stripFrontMatter, renderMarkdown,
   toast, formatDate, readingMinutes,
@@ -248,6 +249,36 @@ $('logout').addEventListener('click', async () => {
   location.href = '/login';
 });
 
+// Troca de senha.
+const pwDialog = $('password-dialog');
+const pwForm = $('password-form');
+$('change-password').addEventListener('click', () => {
+  pwForm.reset();
+  $('password-error').textContent = '';
+  pwDialog.showModal();
+});
+$('password-cancel').addEventListener('click', () => pwDialog.close());
+pwForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const current = pwForm.current.value;
+  const password = pwForm.password.value;
+  const confirm = pwForm.confirm.value;
+  const problem = current ? passwordProblem(password, confirm) : 'Digite a senha atual.';
+  $('password-error').textContent = problem;
+  if (problem) return;
+  const button = pwForm.querySelector('button[type=submit]');
+  button.disabled = true;
+  try {
+    await api('/password', { method: 'POST', body: { current, password, confirm } });
+    pwDialog.close();
+    toast('Senha alterada. Outros dispositivos precisarão entrar novamente.', 4000);
+  } catch (err) {
+    $('password-error').textContent = err.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
 // Arrastar e soltar arquivos na lista para importar.
 let dragDepth = 0;
 const dropHint = $('drop-hint');
@@ -275,11 +306,14 @@ document.addEventListener('drop', (e) => {
 // ---------- Início ----------
 
 session = await getSession();
-if (!session.authenticated && !session.publicRead) {
+if (!session.configured) {
+  location.replace('/setup');
+} else if (!session.authenticated && !session.publicRead) {
   goToLogin();
 } else {
   document.querySelectorAll('.admin-only').forEach((el) => { el.hidden = !isAdmin(); });
   $('logout').hidden = !isAdmin();
+  $('change-password').hidden = !isAdmin();
   $('login-link').hidden = isAdmin();
   route();
 }

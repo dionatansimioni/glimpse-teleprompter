@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const PORT = 3999;
-export const ADMIN_PASSWORD = 'senha-e2e';
+export const E2E_PASSWORD = 'senha-e2e-123';
 
 export default defineConfig({
   testDir: './e2e',
@@ -16,8 +16,10 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'celular', use: { ...devices['Pixel 7'] } },
+    // Roda primeiro, com o servidor ainda sem senha: testa a tela de setup inicial.
+    { name: 'setup', testMatch: /setup\.spec\.js/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'desktop', dependencies: ['setup'], testIgnore: /setup\.spec\.js/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'celular', dependencies: ['setup'], testIgnore: /setup\.spec\.js/, use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
     command: 'node src/server.js',
@@ -25,7 +27,6 @@ export default defineConfig({
     reuseExistingServer: false,
     env: {
       PORT: String(PORT),
-      ADMIN_PASSWORD,
       DATA_DIR: path.join(os.tmpdir(), `glimpse-e2e-${Date.now()}`),
     },
   },

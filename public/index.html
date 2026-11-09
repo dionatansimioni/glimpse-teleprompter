@@ -15,6 +15,7 @@
     <a class="brand" href="/"><img src="/icon.svg" alt=""> Glimpse</a>
     <div class="spacer"></div>
     <a class="button ghost" id="login-link" href="/login" hidden>Entrar</a>
+    <button class="ghost" id="change-password" hidden>Alterar senha</button>
     <button class="ghost" id="logout" hidden>Sair</button>
   </header>
 
@@ -56,6 +57,24 @@
       </p>
     </section>
   </main>
+
+  <dialog id="password-dialog" class="dialog">
+    <form id="password-form" novalidate>
+      <h2>Alterar senha</h2>
+      <label class="field-label" for="pw-current">Senha atual</label>
+      <input type="password" id="pw-current" name="current" autocomplete="current-password" required>
+      <label class="field-label" for="pw-new">Nova senha</label>
+      <input type="password" id="pw-new" name="password" autocomplete="new-password" minlength="8" required>
+      <label class="field-label" for="pw-confirm">Confirme a nova senha</label>
+      <input type="password" id="pw-confirm" name="confirm" autocomplete="new-password" minlength="8" required>
+      <p class="hint">Mínimo de 8 caracteres. Os outros dispositivos conectados precisarão entrar de novo.</p>
+      <div class="error" id="password-error" role="alert"></div>
+      <div class="dialog-actions">
+        <button type="button" id="password-cancel">Cancelar</button>
+        <button type="submit" class="primary">Salvar</button>
+      </div>
+    </form>
+  </dialog>
 
   <div id="drop-hint" class="drop-hint" hidden>Solte os arquivos .md para importar</div>
 </body>

@@ -230,6 +230,23 @@ main.container {
 .login p { margin: 0; color: var(--muted); }
 .error { color: var(--danger); font-size: .9rem; min-height: 1.3em; }
 
+.field-label { font-size: .9rem; font-weight: 600; margin-bottom: -8px; }
+
+/* ---------- Diálogo ---------- */
+.dialog {
+  width: min(400px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+}
+.dialog::backdrop { background: rgb(0 0 0 / .55); }
+.dialog form { display: grid; gap: 14px; padding: 24px; }
+.dialog h2 { margin: 0; font-size: 1.2rem; }
+.dialog .hint { margin: 0; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;

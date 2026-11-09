@@ -13,20 +13,20 @@ Teleprompter web, open source e auto-hospedado. Você sobe seus roteiros em Mark
 
 ```bash
 mkdir glimpse && cd glimpse
-curl -O https://raw.githubusercontent.com/OWNER/glimpse-teleprompter/main/docker-compose.yml
-echo "ADMIN_PASSWORD=uma-senha-forte" > .env
+curl -O https://raw.githubusercontent.com/dionatansimioni/glimpse-teleprompter/main/docker-compose.yml
 docker compose up -d
 ```
 
-Antes, troque `OWNER` no `docker-compose.yml` pelo seu usuário ou organização do GitHub. Depois acesse `http://IP-DO-SERVIDOR:3000` no PC e no celular.
+Acesse `http://IP-DO-SERVIDOR:3000` no navegador. No **primeiro acesso** o Glimpse pede para você criar a senha de administrador (com confirmação). Depois é só entrar com ela no PC, no celular e no tablet.
+
+> Faça o setup logo após subir o container: até a senha ser criada, qualquer pessoa que acessar o endereço pode defini-la.
 
 Ou direto com `docker run`:
 
 ```bash
 docker run -d --name glimpse -p 3000:3000 \
-  -e ADMIN_PASSWORD=uma-senha-forte \
   -v glimpse-data:/data \
-  ghcr.io/OWNER/glimpse-teleprompter:latest
+  ghcr.io/dionatansimioni/glimpse-teleprompter:latest
 ```
 
 As imagens são publicadas no GitHub Container Registry (`ghcr.io`) para `linux/amd64` e `linux/arm64` (Raspberry Pi 4/5 incluídos).
@@ -35,7 +35,6 @@ As imagens são publicadas no GitHub Container Registry (`ghcr.io`) para `linux/
 
 | Variável | Padrão | Descrição |
 |---|---|---|
-| `ADMIN_PASSWORD` | *(obrigatória)* | Senha do administrador. Também aceita `ADMIN_PASSWORD_FILE` (Docker secrets). |
 | `PUBLIC_READ` | `false` | `true` permite listar e ler roteiros sem login (editar continua exigindo login). |
 | `COOKIE_SECURE` | `false` | Use `true` quando o acesso for por HTTPS. |
 | `TRUST_PROXY` | *(vazio)* | Número de proxies reversos à frente (ex.: `1`), para identificar o IP real no limite de tentativas de login. |
@@ -43,11 +42,24 @@ As imagens são publicadas no GitHub Container Registry (`ghcr.io`) para `linux/
 | `PORT` | `3000` | Porta interna do servidor. |
 | `DATA_DIR` | `/data` | Onde os roteiros são salvos (um arquivo JSON por roteiro). |
 
-Trocar a `ADMIN_PASSWORD` encerra todas as sessões abertas. As sessões duram 30 dias.
+Todas são opcionais.
+
+### Senha de administrador
+
+- **Criar:** no primeiro acesso, pela tela de configuração inicial.
+- **Alterar:** botão **Alterar senha** no topo da biblioteca (pede a senha atual, a nova e a confirmação). Os outros dispositivos conectados precisam entrar de novo.
+- **Esqueci a senha:** remova-a e reinicie; no próximo acesso a tela de configuração inicial aparece de novo. Os roteiros não são afetados.
+
+  ```bash
+  docker compose exec glimpse node src/reset-password.js
+  docker compose restart glimpse
+  ```
+
+A senha é guardada apenas como hash (scrypt) em `/data/auth.json`. As sessões duram 30 dias.
 
 ## Fluxo de uso
 
-1. No PC, entre em `http://servidor:3000`, faça login e clique em **Novo roteiro** ou **Importar .md** (ou arraste arquivos para a página).
+1. No PC, entre em `http://servidor:3000`, faça login (ou crie a senha, no primeiro acesso) e clique em **Novo roteiro** ou **Importar .md** (ou arraste arquivos para a página).
 2. No celular ou tablet, abra o mesmo endereço, faça login e toque em **Ler**.
 3. Toque em ⚙ para ajustar texto, velocidade, espelhamento e atalhos. Use o botão de tela cheia ou adicione o Glimpse à tela inicial.
 
@@ -98,7 +110,7 @@ Requer Node.js 20 ou superior.
 
 ```bash
 npm install
-ADMIN_PASSWORD=dev npm run dev   # http://localhost:3000
+npm run dev                      # http://localhost:3000
 npm test                         # testes de API, páginas e módulos
 npm run test:e2e                 # testes no navegador (Playwright, via Docker)
 ```

@@ -1,7 +1,7 @@
 import { test as base, expect } from '@playwright/test';
-import { ADMIN_PASSWORD } from '../playwright.config.js';
+import { E2E_PASSWORD } from '../playwright.config.js';
 
-export { expect, ADMIN_PASSWORD };
+export { expect, E2E_PASSWORD };
 
 export const SAMPLE = `# Abertura
 
@@ -34,7 +34,7 @@ export const test = base.extend({
   adminPage: async ({ page }, use) => {
     const res = await page.request.post('/api/login', {
       headers: { 'x-glimpse': '1' },
-      data: { password: ADMIN_PASSWORD },
+      data: { password: E2E_PASSWORD },
     });
     expect(res.ok()).toBeTruthy();
     await use(page);
