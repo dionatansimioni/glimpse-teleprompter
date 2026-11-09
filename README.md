@@ -112,7 +112,7 @@ Requer Node.js 20 ou superior.
 npm install
 npm run dev                      # http://localhost:3000
 npm test                         # testes de API, páginas e módulos
-npm run test:e2e                 # testes no navegador (Playwright, via Docker)
+npm run test:e2e                 # testes no navegador (Playwright, via Docker; versão lida do package.json)
 ```
 
 Estrutura:

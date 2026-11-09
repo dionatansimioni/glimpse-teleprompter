@@ -1,0 +1,35 @@
+# Mantém dependências atualizadas: cada PR do Dependabot roda os testes
+# unitários e e2e antes de poder ser aceito.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dependencias:
+        patterns: ['*']
+        update-types: [minor, patch]
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    ignore:
+      # Só versões LTS do Node: a troca de major é feita manualmente.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+    commit-message:
+      prefix: docker
