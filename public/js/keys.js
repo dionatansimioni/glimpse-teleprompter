@@ -1,26 +1,28 @@
 // Atalhos de teclado / controles Bluetooth / gamepad. Guardados no servidor e
 // valem para todos os roteiros. Módulo sem DOM: usado pelo navegador, servidor e testes.
 
+import { t } from './i18n.js';
+
 export const KEYS_STORAGE = 'glimpse.keys.v1'; // gitleaks:allow (nome de chave do localStorage, não é segredo)
 
 export const ACTIONS = [
-  { id: 'togglePlay', label: 'Reproduzir / pausar', keys: ['Space', 'Enter', 'NumpadEnter', 'MediaPlayPause', 'KeyK'] },
-  { id: 'speedUp', label: 'Aumentar velocidade', keys: ['ArrowRight', 'Equal', 'NumpadAdd'], repeat: true },
-  { id: 'speedDown', label: 'Diminuir velocidade', keys: ['ArrowLeft', 'Minus', 'NumpadSubtract'], repeat: true },
-  { id: 'jumpBack', label: 'Voltar trecho', keys: ['ArrowUp', 'PageUp', 'MediaTrackPrevious'], repeat: true },
-  { id: 'jumpForward', label: 'Avançar trecho', keys: ['ArrowDown', 'PageDown', 'MediaTrackNext'], repeat: true },
-  { id: 'prevSection', label: 'Seção anterior', keys: ['Comma'] },
-  { id: 'nextSection', label: 'Próxima seção', keys: ['Period'] },
-  { id: 'toStart', label: 'Ir para o início', keys: ['Home'] },
-  { id: 'toEnd', label: 'Ir para o fim', keys: ['End'] },
-  { id: 'fontUp', label: 'Aumentar texto', keys: ['BracketRight'], repeat: true },
-  { id: 'fontDown', label: 'Diminuir texto', keys: ['BracketLeft'], repeat: true },
-  { id: 'mirrorX', label: 'Espelhar horizontalmente', keys: ['KeyM'] },
-  { id: 'mirrorY', label: 'Espelhar verticalmente', keys: ['KeyV'] },
-  { id: 'reverse', label: 'Inverter direção', keys: ['KeyR'] },
-  { id: 'fullscreen', label: 'Tela cheia', keys: ['KeyF'] },
-  { id: 'toggleHud', label: 'Mostrar / esconder controles', keys: ['KeyH'] },
-  { id: 'settings', label: 'Configurações', keys: ['KeyS'] },
+  { id: 'togglePlay', keys: ['Space', 'Enter', 'NumpadEnter', 'MediaPlayPause', 'KeyK'] },
+  { id: 'speedUp', keys: ['ArrowRight', 'Equal', 'NumpadAdd'], repeat: true },
+  { id: 'speedDown', keys: ['ArrowLeft', 'Minus', 'NumpadSubtract'], repeat: true },
+  { id: 'jumpBack', keys: ['ArrowUp', 'PageUp', 'MediaTrackPrevious'], repeat: true },
+  { id: 'jumpForward', keys: ['ArrowDown', 'PageDown', 'MediaTrackNext'], repeat: true },
+  { id: 'prevSection', keys: ['Comma'] },
+  { id: 'nextSection', keys: ['Period'] },
+  { id: 'toStart', keys: ['Home'] },
+  { id: 'toEnd', keys: ['End'] },
+  { id: 'fontUp', keys: ['BracketRight'], repeat: true },
+  { id: 'fontDown', keys: ['BracketLeft'], repeat: true },
+  { id: 'mirrorX', keys: ['KeyM'] },
+  { id: 'mirrorY', keys: ['KeyV'] },
+  { id: 'reverse', keys: ['KeyR'] },
+  { id: 'fullscreen', keys: ['KeyF'] },
+  { id: 'toggleHud', keys: ['KeyH'] },
+  { id: 'settings', keys: ['KeyS'] },
 ];
 
 export const ACTION_IDS = ACTIONS.map((a) => a.id);
@@ -42,26 +44,31 @@ export function bindingFromKeyEvent(e) {
 export const gamepadButtonBinding = (index) => `pad:b${index}`;
 export const gamepadAxisBinding = (index, positive) => `pad:a${index}${positive ? '+' : '-'}`;
 
+// Nomes fixos; os que dependem do idioma vêm das traduções (key.*).
+const TRANSLATED = {
+  Space: 'key.space', NumpadEnter: 'key.numpadEnter',
+  MediaPlayPause: 'key.mediaPlayPause', MediaTrackNext: 'key.mediaNext', MediaTrackPrevious: 'key.mediaPrev',
+};
 const NAMES = {
-  Space: 'Espaço', Enter: 'Enter', NumpadEnter: 'Enter (num)', Escape: 'Esc',
+  Enter: 'Enter', Escape: 'Esc',
   ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→',
   PageUp: 'Page Up', PageDown: 'Page Down', Home: 'Home', End: 'End',
   Equal: '=', Minus: '-', NumpadAdd: '+ (num)', NumpadSubtract: '- (num)',
   Comma: ',', Period: '.', BracketLeft: '[', BracketRight: ']',
-  MediaPlayPause: 'Mídia ⏯', MediaTrackNext: 'Mídia ⏭', MediaTrackPrevious: 'Mídia ⏮',
   AudioVolumeUp: 'Volume +', AudioVolumeDown: 'Volume −',
 };
 
 export function bindingLabel(binding) {
+  if (TRANSLATED[binding]) return t(TRANSLATED[binding]);
   if (NAMES[binding]) return NAMES[binding];
   let m;
   if ((m = binding.match(/^Key([A-Z])$/))) return m[1];
   if ((m = binding.match(/^Digit(\d)$/))) return m[1];
   if ((m = binding.match(/^Numpad(\d)$/))) return `${m[1]} (num)`;
-  if ((m = binding.match(/^pad:b(\d+)$/))) return `Controle: botão ${m[1]}`;
-  if ((m = binding.match(/^pad:a(\d+)([+-])$/))) return `Controle: eixo ${m[1]}${m[2]}`;
-  if ((m = binding.match(/^key:(.+)$/))) return m[1] === ' ' ? 'Espaço' : m[1];
-  if ((m = binding.match(/^keyCode:(\d+)$/))) return `Código ${m[1]}`;
+  if ((m = binding.match(/^pad:b(\d+)$/))) return t('key.padButton', { n: m[1] });
+  if ((m = binding.match(/^pad:a(\d+)([+-])$/))) return t('key.padAxis', { n: m[1], dir: m[2] });
+  if ((m = binding.match(/^key:(.+)$/))) return m[1] === ' ' ? t('key.space') : m[1];
+  if ((m = binding.match(/^keyCode:(\d+)$/))) return t('key.code', { n: m[1] });
   return binding;
 }
 
@@ -125,4 +132,4 @@ export function clearLegacyBindings(storage) {
 }
 
 export const isRepeatable = (actionId) => Boolean(ACTIONS.find((a) => a.id === actionId)?.repeat);
-export const actionLabel = (actionId) => ACTIONS.find((a) => a.id === actionId)?.label ?? actionId;
+export const actionLabel = (actionId) => t(`action.${actionId}`);

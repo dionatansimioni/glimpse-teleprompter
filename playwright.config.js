@@ -13,6 +13,7 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
+    locale: 'pt-BR', // os testes em inglês usam um contexto próprio
     trace: 'retain-on-failure',
   },
   projects: [

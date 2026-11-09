@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AuthError, createAuth } from './auth.js';
+import { languageFromHeaders, translate } from '../public/js/i18n.js';
 import { createStore } from './store.js';
 import { createSettingsStore } from './settings-store.js';
 
@@ -10,19 +11,22 @@ const PUBLIC = path.join(ROOT, 'public');
 const MAX_TITLE = 200;
 const MAX_CONTENT = 1_000_000;
 
+// Erro HTTP com chave de tradução (server.*), traduzida no idioma da requisição.
 class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
+  constructor(status, key, params = {}) {
+    super(key);
     this.status = status;
+    this.key = key;
+    this.params = params;
   }
 }
 
 function parseScript(body) {
   const title = typeof body?.title === 'string' ? body.title.trim() : '';
   const content = typeof body?.content === 'string' ? body.content.replace(/\r\n?/g, '\n') : '';
-  if (!title) throw new HttpError(400, 'O título é obrigatório.');
-  if (title.length > MAX_TITLE) throw new HttpError(400, `O título pode ter até ${MAX_TITLE} caracteres.`);
-  if (content.length > MAX_CONTENT) throw new HttpError(413, 'O roteiro é grande demais.');
+  if (!title) throw new HttpError(400, 'server.titleRequired');
+  if (title.length > MAX_TITLE) throw new HttpError(400, 'server.titleTooLong', { max: MAX_TITLE });
+  if (content.length > MAX_CONTENT) throw new HttpError(413, 'server.scriptTooLarge');
   return { title, content };
 }
 
@@ -83,13 +87,13 @@ export async function createApp({
   // customizado, que um site de terceiros não consegue enviar sem CORS.
   api.use((req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.get('x-glimpse') !== '1') {
-      return next(new HttpError(403, 'Requisição recusada.'));
+      return next(new HttpError(403, 'server.forbidden'));
     }
     next();
   });
 
   const requireAdmin = (req, res, next) =>
-    auth.isAuthenticated(req) ? next() : next(new HttpError(401, 'Faça login como administrador.'));
+    auth.isAuthenticated(req) ? next() : next(new HttpError(401, 'server.loginRequired'));
   const requireReader = (req, res, next) => (publicRead ? next() : requireAdmin(req, res, next));
 
   api.get('/session', (req, res) => {
@@ -108,11 +112,11 @@ export async function createApp({
   });
 
   api.post('/login', async (req, res) => {
-    if (!auth.isConfigured()) throw new HttpError(409, 'Defina a senha de administrador primeiro.');
+    if (!auth.isConfigured()) throw new HttpError(409, 'server.setupRequired');
     if (!auth.allowAttempt(req.ip)) {
-      throw new HttpError(429, 'Muitas tentativas. Aguarde alguns minutos.');
+      throw new HttpError(429, 'server.tooManyAttempts');
     }
-    if (!(await auth.checkPassword(req.body?.password))) throw new HttpError(401, 'Senha incorreta.');
+    if (!(await auth.checkPassword(req.body?.password))) throw new HttpError(401, 'server.wrongPassword');
     auth.clearAttempts(req.ip);
     auth.startSession(res);
     res.json({ authenticated: true });
@@ -121,7 +125,7 @@ export async function createApp({
   // Troca de senha: encerra todas as sessões e abre uma nova para quem trocou.
   api.post('/password', requireAdmin, async (req, res) => {
     if (!auth.allowAttempt(req.ip)) {
-      throw new HttpError(429, 'Muitas tentativas. Aguarde alguns minutos.');
+      throw new HttpError(429, 'server.tooManyAttempts');
     }
     const { current, password, confirm } = req.body ?? {};
     await auth.changePassword(current, password, confirm);
@@ -141,13 +145,13 @@ export async function createApp({
 
   api.get('/scripts/:id', requireReader, async (req, res) => {
     const doc = await store.get(req.params.id);
-    if (!doc) throw new HttpError(404, 'Roteiro não encontrado.');
+    if (!doc) throw new HttpError(404, 'server.scriptNotFound');
     res.json(doc);
   });
 
   api.get('/scripts/:id/download', requireReader, async (req, res) => {
     const doc = await store.get(req.params.id);
-    if (!doc) throw new HttpError(404, 'Roteiro não encontrado.');
+    if (!doc) throw new HttpError(404, 'server.scriptNotFound');
     const filename = `${slugify(doc.title)}.md`;
     res.set('Content-Disposition', `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.type('text/markdown; charset=utf-8').send(doc.content);
@@ -159,17 +163,17 @@ export async function createApp({
 
   api.put('/scripts/:id', requireAdmin, async (req, res) => {
     const doc = await store.update(req.params.id, parseScript(req.body));
-    if (!doc) throw new HttpError(404, 'Roteiro não encontrado.');
+    if (!doc) throw new HttpError(404, 'server.scriptNotFound');
     res.json(doc);
   });
 
   api.put('/scripts/:id/settings', requireAdmin, async (req, res) => {
     const overrides = req.body?.settings;
     if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides)) {
-      throw new HttpError(400, 'Envie os ajustes em "settings".');
+      throw new HttpError(400, 'server.invalidOverrides');
     }
     const doc = await store.updateSettings(req.params.id, overrides);
-    if (!doc) throw new HttpError(404, 'Roteiro não encontrado.');
+    if (!doc) throw new HttpError(404, 'server.scriptNotFound');
     res.json({ settings: doc.settings });
   });
 
@@ -183,27 +187,28 @@ export async function createApp({
     const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
     if ((settings !== undefined && !isObj(settings)) || (bindings !== undefined && !isObj(bindings))
       || (settings === undefined && bindings === undefined)) {
-      throw new HttpError(400, 'Envie "settings" e/ou "bindings".');
+      throw new HttpError(400, 'server.invalidSettings');
     }
     res.json(await settingsStore.update({ settings, bindings }));
   });
 
   api.delete('/scripts/:id', requireAdmin, async (req, res) => {
-    if (!(await store.remove(req.params.id))) throw new HttpError(404, 'Roteiro não encontrado.');
+    if (!(await store.remove(req.params.id))) throw new HttpError(404, 'server.scriptNotFound');
     res.status(204).end();
   });
 
-  api.use((req, res, next) => next(new HttpError(404, 'Rota não encontrada.')));
+  api.use((req, res, next) => next(new HttpError(404, 'server.routeNotFound')));
 
   // eslint-disable-next-line no-unused-vars
   api.use((err, req, res, next) => {
     const status = err.status || err.statusCode || 500;
     if (status >= 500) console.error(err);
-    const message =
-      err instanceof HttpError || err instanceof AuthError ? err.message
-      : status === 413 ? 'O roteiro é grande demais.'
-      : status === 400 ? 'Requisição inválida.'
-      : 'Erro interno do servidor.';
+    const key =
+      err instanceof HttpError || err instanceof AuthError ? err.key
+      : status === 413 ? 'server.scriptTooLarge'
+      : status === 400 ? 'server.badRequest'
+      : 'server.internalError';
+    const message = translate(languageFromHeaders(req.headers), key, err.params);
     res.status(status).json({ error: message });
   });
 

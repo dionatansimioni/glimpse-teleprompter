@@ -1,11 +1,17 @@
 import { api, getSession } from './common.js';
 import { passwordProblem } from './password-rules.js';
+import { translateDom, bindLanguageButtons } from './i18n.js';
+
+translateDom();
+bindLanguageButtons();
 
 const form = document.getElementById('setup-form');
 const error = document.getElementById('error');
 
 const session = await getSession();
 if (session.configured) location.replace(session.authenticated ? '/' : '/login');
+
+window.addEventListener('glimpse:language', () => { error.textContent = ''; });
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();

@@ -1,8 +1,9 @@
 import { marked } from '/vendor/marked/marked.esm.js';
 import DOMPurify from '/vendor/dompurify/purify.es.mjs';
+import { getLanguage, locale, t } from './i18n.js';
 
 export async function api(path, { method = 'GET', body, keepalive = false } = {}) {
-  const headers = { 'x-glimpse': '1' };
+  const headers = { 'x-glimpse': '1', 'x-glimpse-lang': getLanguage() };
   if (body !== undefined) headers['content-type'] = 'application/json';
   const res = await fetch(`/api${path}`, {
     method,
@@ -13,7 +14,7 @@ export async function api(path, { method = 'GET', body, keepalive = false } = {}
   });
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
-    const err = new Error(data?.error || `Erro ${res.status}`);
+    const err = new Error(data?.error || t('common.error', { status: res.status }));
     err.status = res.status;
     throw err;
   }
@@ -72,7 +73,7 @@ export function toast(message, ms = 2400) {
 }
 
 export function formatDate(iso) {
-  return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  return new Date(iso).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' });
 }
 
 export function readingMinutes(words, wpm = 150) {

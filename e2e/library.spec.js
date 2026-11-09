@@ -78,7 +78,10 @@ test('busca filtra a lista', async ({ adminPage: page, createScript }) => {
 
 test('altera a senha pelo diálogo e volta para a original', async ({ adminPage: page }) => {
   await page.goto('/');
-  const open = () => page.click('#change-password');
+  const open = async () => {
+    await page.click('#menu-button');
+    await page.click('#change-password');
+  };
   const fill = async (current, password, confirm = password) => {
     await page.fill('#pw-current', current);
     await page.fill('#pw-new', password);

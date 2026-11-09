@@ -40,6 +40,29 @@ const CHOICES = {
   theme: ['dark', 'yellow', 'green', 'light'],
 };
 
+// Formulário de configurações: seções e campos (os rótulos vêm das traduções
+// section.<id>, setting.<key> e setting.<key>.<opção>).
+const STEPS = { speed: 1, jumpLines: 1, countdown: 1, fontSize: 2, lineHeight: 0.05, margin: 1, guidePos: 1 };
+const UNITS = { countdown: 's', fontSize: 'px', margin: '%', guidePos: '%' };
+const SECTIONS = {
+  scroll: ['speed', 'direction', 'jumpLines', 'countdown'],
+  text: ['fontSize', 'lineHeight', 'margin', 'align', 'font', 'theme', 'uppercase'],
+  screen: ['mirrorX', 'mirrorY', 'showGuide', 'guidePos', 'keepAwake', 'mediaKeys'],
+};
+const WITH_NOTE = ['mediaKeys'];
+
+export const SETTINGS_FORM = Object.freeze(Object.entries(SECTIONS).map(([id, keys]) => ({
+  id,
+  fields: keys.map((key) => {
+    if (key in NUMBER_RANGES) {
+      const [min, max] = NUMBER_RANGES[key];
+      return { key, type: 'range', min, max, step: STEPS[key], unit: UNITS[key] ?? '' };
+    }
+    if (key in CHOICES) return { key, type: 'select', options: [...CHOICES[key]] };
+    return { key, type: 'checkbox', note: WITH_NOTE.includes(key) };
+  }),
+})));
+
 export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 // Configurações que valem para todos os roteiros e não podem ser sobrescritas

@@ -1,4 +1,7 @@
-import { passwordProblem } from './password-rules.js';
+import { t, translateDom } from './i18n.js';
+import { mountMenu } from './menu.js';
+
+translateDom();
 import {
   api, getSession, goToLogin, extractTitle, stripFrontMatter, renderMarkdown,
   toast, formatDate, readingMinutes,
@@ -45,8 +48,8 @@ function renderList() {
 
   emptyEl.hidden = items.length > 0;
   emptyEl.textContent = scripts.length === 0
-    ? (isAdmin() ? 'Nenhum roteiro ainda. Crie um novo, importe um arquivo .md ou arraste arquivos para cá.' : 'Nenhum roteiro disponível.')
-    : 'Nenhum roteiro encontrado para esta busca.';
+    ? t(isAdmin() ? 'library.emptyAdmin' : 'library.emptyReader')
+    : t('library.noResults');
 }
 
 function renderItem(script) {
@@ -61,20 +64,23 @@ function renderItem(script) {
   title.textContent = script.title;
   const meta = document.createElement('span');
   meta.className = 'script-meta';
-  meta.textContent = `${formatDate(script.updatedAt)} · ${script.words} palavras · ~${readingMinutes(script.words)} min`
-    + (script.customized ? ' · ajustes próprios' : '');
+  meta.textContent = t('library.meta', {
+    date: formatDate(script.updatedAt),
+    words: script.words,
+    minutes: readingMinutes(script.words),
+  }) + (script.customized ? t('library.customized') : '');
   main.append(title, meta);
 
   const actions = document.createElement('div');
   actions.className = 'script-actions';
-  const read = link('Ler', `/read/${script.id}`, 'button primary');
+  const read = link(t('library.read'), `/read/${script.id}`, 'button primary');
   actions.append(read);
   if (isAdmin()) {
-    actions.append(link('Editar', `#/edit/${script.id}`, 'button'));
-    actions.append(link('Baixar', `/api/scripts/${script.id}/download`, 'button'));
+    actions.append(link(t('library.edit'), `#/edit/${script.id}`, 'button'));
+    actions.append(link(t('library.download'), `/api/scripts/${script.id}/download`, 'button'));
     const del = document.createElement('button');
     del.className = 'danger';
-    del.textContent = 'Excluir';
+    del.textContent = t('library.delete');
     del.addEventListener('click', () => deleteScript(script));
     actions.append(del);
   }
@@ -92,10 +98,10 @@ function link(text, href, className) {
 }
 
 async function deleteScript(script) {
-  if (!confirm(`Excluir o roteiro "${script.title}"? Esta ação não pode ser desfeita.`)) return;
+  if (!confirm(t('library.confirmDelete', { title: script.title }))) return;
   try {
     await api(`/scripts/${script.id}`, { method: 'DELETE' });
-    toast('Roteiro excluído.');
+    toast(t('library.deleted'));
     await loadList();
   } catch (err) {
     toast(err.message);
@@ -104,21 +110,21 @@ async function deleteScript(script) {
 
 async function importFiles(files) {
   const accepted = [...files].filter((f) => /\.(md|markdown|txt)$/i.test(f.name) || f.type.startsWith('text/'));
-  if (!accepted.length) return toast('Selecione arquivos .md ou .txt.');
+  if (!accepted.length) return toast(t('library.importSelect'));
   let ok = 0;
   for (const file of accepted) {
     try {
       const text = await file.text();
       await api('/scripts', {
         method: 'POST',
-        body: { title: extractTitle(text, file.name).slice(0, 200), content: stripFrontMatter(text) },
+        body: { title: extractTitle(text, file.name, t('library.untitled')).slice(0, 200), content: stripFrontMatter(text) },
       });
       ok += 1;
     } catch (err) {
       toast(`${file.name}: ${err.message}`, 4000);
     }
   }
-  if (ok) toast(ok === 1 ? '1 roteiro importado.' : `${ok} roteiros importados.`);
+  if (ok) toast(ok === 1 ? t('library.importedOne') : t('library.importedMany', { n: ok }));
   await loadList();
 }
 
@@ -149,14 +155,14 @@ async function openEditor(id) {
 function updateEditorStatus() {
   readLink.hidden = !editing?.id;
   if (editing?.id) readLink.href = `/read/${editing.id}`;
-  statusEl.textContent = isDirty() ? 'Alterações não salvas' : (editing?.id ? 'Salvo' : '');
+  statusEl.textContent = isDirty() ? t('editor.unsaved') : (editing?.id ? t('common.saved') : '');
 }
 
 async function save() {
   if (!editing) return;
   const title = titleEl.value.trim();
   if (!title) {
-    toast('Dê um título ao roteiro.');
+    toast(t('editor.needTitle'));
     titleEl.focus();
     return;
   }
@@ -169,9 +175,9 @@ async function save() {
     editing = { id: doc.id, savedTitle: doc.title, savedContent: doc.content };
     titleEl.value = doc.title;
     if (location.hash !== `#/edit/${doc.id}`) history.replaceState(null, '', `#/edit/${doc.id}`);
-    toast('Roteiro salvo.');
+    toast(t('editor.savedToast'));
   } catch (err) {
-    if (err.status === 401) toast('Sessão expirada. Faça login novamente em outra aba e salve de novo.', 5000);
+    if (err.status === 401) toast(t('editor.sessionExpired'), 5000);
     else toast(err.message);
   } finally {
     saveBtn.disabled = false;
@@ -204,7 +210,7 @@ async function route() {
 }
 
 window.addEventListener('hashchange', () => {
-  if (isDirty() && !confirm('Há alterações não salvas. Sair mesmo assim?')) {
+  if (isDirty() && !confirm(t('editor.leaveConfirm'))) {
     history.replaceState(null, '', currentHash);
     return;
   }
@@ -245,39 +251,12 @@ contentEl.addEventListener('keydown', (e) => {
   updateEditorStatus();
 });
 
-$('logout').addEventListener('click', async () => {
-  await api('/logout', { method: 'POST' }).catch(() => {});
-  location.href = '/login';
-});
 
-// Troca de senha.
-const pwDialog = $('password-dialog');
-const pwForm = $('password-form');
-$('change-password').addEventListener('click', () => {
-  pwForm.reset();
-  $('password-error').textContent = '';
-  pwDialog.showModal();
-});
-$('password-cancel').addEventListener('click', () => pwDialog.close());
-pwForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const current = pwForm.current.value;
-  const password = pwForm.password.value;
-  const confirm = pwForm.confirm.value;
-  const problem = current ? passwordProblem(password, confirm) : 'Digite a senha atual.';
-  $('password-error').textContent = problem;
-  if (problem) return;
-  const button = pwForm.querySelector('button[type=submit]');
-  button.disabled = true;
-  try {
-    await api('/password', { method: 'POST', body: { current, password, confirm } });
-    pwDialog.close();
-    toast('Senha alterada. Outros dispositivos precisarão entrar novamente.', 4000);
-  } catch (err) {
-    $('password-error').textContent = err.message;
-  } finally {
-    button.disabled = false;
-  }
+// Troca de idioma: refaz os textos gerados pelo script.
+window.addEventListener('glimpse:language', () => {
+  renderList();
+  updateEditorStatus();
+  if (!previewEl.hidden) previewEl.innerHTML = renderMarkdown(contentEl.value);
 });
 
 // Arrastar e soltar arquivos na lista para importar.
@@ -313,8 +292,6 @@ if (!session.configured) {
   goToLogin();
 } else {
   document.querySelectorAll('.admin-only').forEach((el) => { el.hidden = !isAdmin(); });
-  $('logout').hidden = !isAdmin();
-  $('change-password').hidden = !isAdmin();
-  $('login-link').hidden = isAdmin();
+  mountMenu($('app-menu'), { isAdmin: isAdmin() });
   route();
 }

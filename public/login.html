@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-pending>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Entrar · Glimpse</title>
+  <title data-i18n="login.pageTitle">Entrar · Glimpse</title>
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#121211">
@@ -13,10 +13,14 @@
 <body>
   <main class="login">
     <form id="login-form">
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label">
+        <button type="button" data-lang-option="pt" lang="pt-BR">Português</button>
+        <button type="button" data-lang-option="en" lang="en">English</button>
+      </div>
       <h1><img src="/icon.svg" alt=""> Glimpse Teleprompter</h1>
-      <p>Entre com a senha de administrador.</p>
-      <input type="password" id="password" name="password" placeholder="Senha" autocomplete="current-password" required autofocus>
-      <button type="submit" class="primary">Entrar</button>
+      <p data-i18n="login.intro">Entre com a senha de administrador.</p>
+      <input type="password" id="password" name="password" data-i18n-attr="placeholder:login.password;aria-label:login.password" placeholder="Senha" autocomplete="current-password" required autofocus>
+      <button type="submit" class="primary" data-i18n="login.submit">Entrar</button>
       <div class="error" id="error" role="alert"></div>
     </form>
   </main>

@@ -29,6 +29,8 @@
 }
 
 * { box-sizing: border-box; }
+/* Esconde a página até os textos estarem no idioma escolhido (js/i18n.js). */
+html[data-i18n-pending] body { visibility: hidden; }
 [hidden] { display: none !important; }
 
 html, body { margin: 0; }
@@ -228,6 +230,17 @@ main.container {
 .login h1 { margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
 .login h1 img { width: 30px; height: 30px; }
 .login p { margin: 0; color: var(--muted); }
+/* Seletor de idioma (login e setup) */
+.lang-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.lang-switch button { border: 0; border-radius: 0; min-height: 34px; font-size: .9rem; }
+.lang-switch button[aria-pressed="true"] { background: var(--text); color: var(--bg); font-weight: 600; }
+
 .error { color: var(--danger); font-size: .9rem; min-height: 1.3em; }
 
 .field-label { font-size: .9rem; font-weight: 600; margin-bottom: -8px; }
@@ -279,3 +292,58 @@ main.container {
 .md hr { border: 0; border-top: 2px dashed var(--border); margin: 2em 0; }
 .md img { max-width: 100%; }
 .md mark { background: #ffe066; color: #111; padding: 0 .15em; border-radius: 3px; }
+
+/* ---------- Menu (canto superior direito) ---------- */
+.menu { position: relative; }
+.icon-button { width: 42px; padding: 0; }
+.icon-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  min-width: 240px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgb(0 0 0 / .25);
+}
+.menu-list [role^="menuitem"] {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  text-decoration: none;
+}
+.menu-list [role^="menuitem"]:hover, .menu-list [role^="menuitem"]:focus-visible {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  outline: none;
+}
+.menu-list [role="menuitemradio"]::before {
+  content: '';
+  width: 1.2em;
+}
+.menu-list [role="menuitemradio"][aria-checked="true"]::before { content: '✓'; color: var(--accent); }
+.menu-label { padding: 6px 12px 2px; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.menu-sep { height: 1px; margin: 6px 4px; background: var(--border); }
+#logout { color: var(--danger); }
+
+/* ---------- Página de configurações ---------- */
+.settings-page { max-width: 720px; }
+.settings-page h1 { margin: 0 0 4px; font-size: 1.5rem; }
+.settings-page .settings-sections { margin-top: 12px; }
+.settings-page #settings-form > section { border-bottom: 1px solid var(--border); }

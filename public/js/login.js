@@ -1,4 +1,8 @@
 import { api, getSession } from './common.js';
+import { translateDom, bindLanguageButtons } from './i18n.js';
+
+translateDom();
+bindLanguageButtons();
 
 const form = document.getElementById('login-form');
 const error = document.getElementById('error');
@@ -12,6 +16,9 @@ function nextUrl() {
 const session = await getSession();
 if (!session.configured) location.replace('/setup');
 else if (session.authenticated) location.replace(nextUrl());
+
+// Ao trocar o idioma, limpa a mensagem de erro (que estava no idioma anterior).
+window.addEventListener('glimpse:language', () => { error.textContent = ''; });
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();

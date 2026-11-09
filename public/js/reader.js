@@ -1,15 +1,19 @@
 import { api, getSession, goToLogin, renderMarkdown, toast } from './common.js';
 import {
-  sanitizeSettings, sanitizeOverrides, effectiveSettings, settingTarget, GLOBAL_ONLY,
+  sanitizeSettings, sanitizeOverrides, effectiveSettings, settingTarget,
   DEFAULT_SETTINGS, readLegacySettings, clearLegacySettings,
   pixelsPerSecond, formatDuration, clamp,
 } from './settings.js';
 import {
-  ACTIONS, readLegacyBindings, clearLegacyBindings, defaultBindings, bindingFromKeyEvent,
-  gamepadButtonBinding, gamepadAxisBinding, bindingLabel, findAction,
-  assignBinding, removeBinding, isRepeatable, actionLabel,
+  readLegacyBindings, clearLegacyBindings, defaultBindings, bindingFromKeyEvent,
+  gamepadButtonBinding, gamepadAxisBinding, findAction, isRepeatable,
 } from './keys.js';
 import { createScreenWake, wakeStatusText } from './wake.js';
+import { t, translateDom } from './i18n.js';
+import { renderSettingsForm } from './settings-form.js';
+import { createBindingsEditor } from './bindings-editor.js';
+
+translateDom();
 
 const $ = (id) => document.getElementById(id);
 const body = document.body;
@@ -23,7 +27,6 @@ const progressBar = $('progress-bar');
 const timeLeftEl = $('time-left');
 const countdownEl = $('countdown');
 const flashEl = $('speed-flash');
-const captureEl = $('capture');
 
 const scriptId = decodeURIComponent(location.pathname.split('/').filter(Boolean).pop() ?? '');
 let scriptTitle = '';
@@ -155,7 +158,7 @@ function play() {
 function startPlaying() {
   playing = true;
   body.classList.add('playing');
-  $('btn-play').setAttribute('aria-label', 'Pausar');
+  $('btn-play').setAttribute('aria-label', t('reader.pause'));
   kick();
   scheduleHudHide();
 }
@@ -164,7 +167,7 @@ function pause() {
   stopCountdown();
   playing = false;
   body.classList.remove('playing');
-  $('btn-play').setAttribute('aria-label', 'Reproduzir');
+  $('btn-play').setAttribute('aria-label', t('reader.play'));
   showHud();
 }
 
@@ -227,11 +230,11 @@ function setSaveStatus(text) {
 
 function scheduleSave(what) {
   if (!canSave) {
-    if (!readOnlyWarned) toast('Modo leitura: as alterações valem só nesta tela. Entre como administrador para salvar.', 4000);
+    if (!readOnlyWarned) toast(t('reader.readOnly'), 4000);
     readOnlyWarned = true;
     return;
   }
-  setSaveStatus('Salvando…');
+  setSaveStatus(t('common.saving'));
   clearTimeout(saveTimers[what]);
   saveTimers[what] = setTimeout(() => flushSave(what), 400);
 }
@@ -243,12 +246,10 @@ async function flushSave(what, { keepalive = false } = {}) {
     if (what === 'global') await api('/settings', { method: 'PUT', body: { settings: globalSettings }, keepalive });
     else if (what === 'bindings') await api('/settings', { method: 'PUT', body: { bindings }, keepalive });
     else await api(`/scripts/${encodeURIComponent(scriptId)}/settings`, { method: 'PUT', body: { settings: overrides }, keepalive });
-    if (!Object.keys(saveTimers).length) setSaveStatus('Salvo');
+    if (!Object.keys(saveTimers).length) setSaveStatus(t('common.saved'));
   } catch (err) {
-    setSaveStatus('Erro ao salvar');
-    toast(err.status === 401
-      ? 'Sessão expirada: entre novamente para salvar as configurações.'
-      : `Não foi possível salvar as configurações: ${err.message}`, 4000);
+    setSaveStatus(t('common.saveError'));
+    toast(err.status === 401 ? t('reader.sessionExpired') : t('reader.saveFailed', { error: err.message }), 4000);
   }
 }
 
@@ -267,7 +268,7 @@ async function reloadSettings() {
     bindings = global.bindings;
     overrides = doc.settings ?? {};
     recompute();
-    if (!panel.hidden) renderBindings();
+    if (!panel.hidden) bindingsEditor.render();
   } catch {
     /* mantém o que já está na tela */
   }
@@ -294,38 +295,23 @@ function renderScope() {
   $('clear-overrides').hidden = !canSave || count === 0;
   let note;
   if (!canSave) {
-    note = 'Modo leitura: entre como administrador para salvar as configurações.';
+    note = t('panel.noteReadOnly');
   } else if (scope === 'script') {
-    note = `As alterações valem só para "${scriptTitle}". Itens marcados com ● sobrescrevem a configuração geral.`;
+    note = t('panel.noteScript', { title: scriptTitle });
   } else {
-    note = 'As alterações valem para todos os roteiros, em todos os aparelhos.';
-    if (count) {
-      note += ` Este roteiro tem ${count === 1 ? '1 ajuste próprio' : `${count} ajustes próprios`} (●), que continua${count === 1 ? '' : 'm'} valendo.`;
-    }
+    note = t('panel.noteGlobal');
+    if (count) note += count === 1 ? t('panel.noteOverridesOne') : t('panel.noteOverridesMany', { n: count });
   }
   $('scope-note').textContent = note;
 }
 
-// Botão "voltar à configuração geral" em cada item que um roteiro pode sobrescrever.
-for (const input of panel.querySelectorAll('[data-setting]')) {
-  const key = input.dataset.setting;
-  const row = input.closest('.field, .check');
-  if (GLOBAL_ONLY.includes(key)) {
-    row.classList.add('global-only');
-    continue;
-  }
-  const reset = document.createElement('button');
-  reset.type = 'button';
-  reset.className = 'reset-override';
-  reset.textContent = 'usar geral';
-  reset.title = 'Remover o ajuste deste roteiro e voltar à configuração geral';
-  reset.dataset.reset = key;
-  reset.addEventListener('click', (event) => {
-    event.preventDefault();
-    clearOverride(key);
-  });
-  (row.querySelector(':scope > span') ?? row).append(reset);
-}
+// Formulário gerado a partir de SETTINGS_FORM (mesmo da página de configurações).
+const form = renderSettingsForm($('settings-form'), {
+  onChange: setSetting,
+  overridable: true,
+  onClearOverride: clearOverride,
+  wakeStatus: true,
+});
 
 function applySettings() {
   text.style.setProperty('--prompt-size', `${settings.fontSize}px`);
@@ -348,31 +334,13 @@ function applySettings() {
 }
 
 function syncForm() {
-  for (const input of panel.querySelectorAll('[data-setting]')) {
-    const key = input.dataset.setting;
-    const value = settings[key];
-    if (input.type === 'checkbox') input.checked = value;
-    else input.value = String(value);
-    input.closest('.field, .check').classList.toggle('overridden', Object.hasOwn(overrides, key));
-  }
+  form.sync(settings, overrides);
   renderScope();
-  for (const out of panel.querySelectorAll('output[data-for]')) {
-    out.textContent = `${settings[out.dataset.for]}${out.dataset.unit ?? ''}`;
-  }
-}
-
-for (const input of panel.querySelectorAll('[data-setting]')) {
-  input.addEventListener('input', () => {
-    const value = input.type === 'checkbox' ? input.checked
-      : input.type === 'range' ? Number(input.value)
-      : input.value;
-    setSetting(input.dataset.setting, value);
-  });
 }
 
 function openPanel() {
   pause();
-  renderBindings();
+  bindingsEditor.render();
   panel.hidden = false;
 }
 function closePanel() {
@@ -381,13 +349,13 @@ function closePanel() {
 }
 $('panel-close').addEventListener('click', closePanel);
 $('reset-settings').addEventListener('click', () => {
-  if (!confirm('Restaurar a configuração geral padrão? Isso vale para todos os roteiros.')) return;
+  if (!confirm(t('panel.confirmResetGlobal'))) return;
   globalSettings = { ...DEFAULT_SETTINGS };
   scheduleSave('global');
   recompute();
 });
 $('clear-overrides').addEventListener('click', () => {
-  if (!confirm('Remover os ajustes próprios deste roteiro? Ele volta a seguir a configuração geral.')) return;
+  if (!confirm(t('panel.confirmClearOverrides'))) return;
   overrides = {};
   scheduleSave('script');
   recompute();
@@ -403,10 +371,10 @@ function toggleFullscreen() {
   const el = d.documentElement;
   const request = el.requestFullscreen || el.webkitRequestFullscreen;
   if (!request) {
-    toast('Tela cheia não suportada neste navegador. Use "Adicionar à tela inicial".', 4000);
+    toast(t('reader.fullscreenUnsupported'), 4000);
     return;
   }
-  Promise.resolve(request.call(el, { navigationUI: 'hide' })).catch(() => toast('Não foi possível entrar em tela cheia.'));
+  Promise.resolve(request.call(el, { navigationUI: 'hide' })).catch(() => toast(t('reader.fullscreenFailed')));
 }
 
 // ---------- Manter a tela acesa ----------
@@ -438,7 +406,7 @@ const wake = createScreenWake({
   createVideo: createKeepAwakeVideo,
   onChange: (mode) => {
     body.dataset.wake = mode;
-    $('wake-status').textContent = wakeStatusText(mode, settings.keepAwake);
+    showWakeStatus();
   },
 });
 
@@ -448,7 +416,12 @@ function syncKeepAwake() {
   keepAwakeApplied = settings.keepAwake;
   if (settings.keepAwake) wake.enable();
   else wake.disable();
-  $('wake-status').textContent = wakeStatusText(wake.mode, settings.keepAwake);
+  showWakeStatus();
+}
+
+function showWakeStatus() {
+  const status = $('wake-status');
+  if (status) status.textContent = wakeStatusText(wake.mode, settings.keepAwake);
 }
 
 // Vídeo com som só pode começar após um gesto: cada toque/tecla tenta de novo.
@@ -471,12 +444,12 @@ const jumpPx = () => settings.jumpLines * lineHeightPx;
 
 function changeSpeed(delta) {
   setSetting('speed', settings.speed + delta);
-  flash(`Velocidade ${settings.speed}`);
+  flash(t('reader.flashSpeed', { n: settings.speed }));
 }
 
 function changeFont(delta) {
   setSetting('fontSize', settings.fontSize + delta);
-  flash(`Texto ${settings.fontSize}px`);
+  flash(t('reader.flashFont', { n: settings.fontSize }));
 }
 
 function toggleSetting(key, onText, offText) {
@@ -504,11 +477,11 @@ const actions = {
   toEnd: () => scrollTo(maxPos),
   fontUp: () => changeFont(4),
   fontDown: () => changeFont(-4),
-  mirrorX: () => toggleSetting('mirrorX', 'Espelhado (horizontal)', 'Sem espelho horizontal'),
-  mirrorY: () => toggleSetting('mirrorY', 'Espelhado (vertical)', 'Sem espelho vertical'),
+  mirrorX: () => toggleSetting('mirrorX', t('reader.flashMirrorXOn'), t('reader.flashMirrorXOff')),
+  mirrorY: () => toggleSetting('mirrorY', t('reader.flashMirrorYOn'), t('reader.flashMirrorYOff')),
   reverse: () => {
     setSetting('direction', settings.direction === 'up' ? 'down' : 'up');
-    flash(settings.direction === 'up' ? 'Texto sobe' : 'Texto desce');
+    flash(t(settings.direction === 'up' ? 'reader.flashUp' : 'reader.flashDown'));
   },
   fullscreen: toggleFullscreen,
   toggleHud: () => body.classList.toggle('hud-hidden'),
@@ -531,11 +504,7 @@ hud.addEventListener('click', (e) => {
 
 // ---------- Teclado ----------
 document.addEventListener('keydown', (e) => {
-  if (capturing) {
-    e.preventDefault();
-    if (e.code === 'Escape') return endCapture();
-    return endCapture(bindingFromKeyEvent(e));
-  }
+  if (bindingsEditor.isCapturing()) return; // o editor de atalhos trata a tecla
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (!panel.hidden) {
     if (e.key === 'Escape') closePanel();
@@ -577,14 +546,13 @@ function pollGamepads() {
 }
 
 function onGamepadPress(binding) {
-  if (capturing) return endCapture(binding);
-  if (!panel.hidden) return;
+  if (bindingsEditor.isCapturing() || !panel.hidden) return;
   const actionId = findAction(bindings, binding);
   if (actionId) run(actionId);
 }
 
 window.addEventListener('gamepadconnected', (e) => {
-  toast(`Controle conectado: ${e.gamepad.id.slice(0, 40)}`);
+  toast(t('reader.gamepadConnected', { id: e.gamepad.id.slice(0, 40) }));
   if (!padRaf) padRaf = requestAnimationFrame(pollGamepads);
 });
 window.addEventListener('gamepaddisconnected', (e) => padState.delete(e.gamepad.index));
@@ -697,73 +665,23 @@ new ResizeObserver(() => measure()).observe(text);
 window.addEventListener('resize', () => measure());
 
 // ---------- Editor de atalhos ----------
-let capturing = null;
+const bindingsEditor = createBindingsEditor({
+  container: $('bindings'),
+  getBindings: () => bindings,
+  setBindings: (next) => {
+    bindings = next;
+    scheduleSave('bindings');
+  },
+});
+$('reset-keys').addEventListener('click', () => bindingsEditor.reset());
 
-function renderBindings() {
-  const container = $('bindings');
-  container.replaceChildren(...ACTIONS.map((action) => {
-    const row = document.createElement('div');
-    row.className = 'binding';
-    const label = document.createElement('span');
-    label.className = 'binding-label';
-    label.textContent = action.label;
-    const keys = document.createElement('div');
-    keys.className = 'binding-keys';
-    for (const binding of bindings[action.id]) {
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.textContent = bindingLabel(binding);
-      const remove = document.createElement('button');
-      remove.textContent = '✕';
-      remove.title = 'Remover';
-      remove.setAttribute('aria-label', `Remover ${bindingLabel(binding)} de ${action.label}`);
-      remove.addEventListener('click', () => {
-        bindings = removeBinding(bindings, action.id, binding);
-        scheduleSave('bindings');
-        renderBindings();
-      });
-      chip.append(remove);
-      keys.append(chip);
-    }
-    const add = document.createElement('button');
-    add.className = 'chip-add';
-    add.textContent = '+';
-    add.title = 'Adicionar tecla';
-    add.setAttribute('aria-label', `Adicionar tecla para ${action.label}`);
-    add.addEventListener('click', () => startCapture(action.id));
-    keys.append(add);
-    row.append(label, keys);
-    return row;
-  }));
-}
-
-function startCapture(actionId) {
-  capturing = actionId;
-  $('capture-action').textContent = actionLabel(actionId);
-  captureEl.hidden = false;
-  if (!padRaf && navigator.getGamepads) padRaf = requestAnimationFrame(pollGamepads);
-}
-
-function endCapture(binding = null) {
-  const actionId = capturing;
-  capturing = null;
-  captureEl.hidden = true;
-  if (!binding || !actionId) return;
-  const result = assignBinding(bindings, actionId, binding);
-  bindings = result.bindings;
-  scheduleSave('bindings');
-  renderBindings();
-  toast(result.movedFrom
-    ? `${bindingLabel(binding)} movida de "${actionLabel(result.movedFrom)}" para "${actionLabel(actionId)}".`
-    : `${bindingLabel(binding)} → ${actionLabel(actionId)}`, 3000);
-}
-
-$('capture-cancel').addEventListener('click', () => endCapture());
-$('reset-keys').addEventListener('click', () => {
-  bindings = defaultBindings();
-  scheduleSave('bindings');
-  renderBindings();
-  toast('Atalhos restaurados.');
+// ---------- Troca de idioma (menu de outra aba não afeta; aqui só recarrega textos) ----------
+window.addEventListener('glimpse:language', () => {
+  form.rebuild();
+  syncForm();
+  showWakeStatus();
+  bindingsEditor.render();
+  addEndMark();
 });
 
 // ---------- Início ----------
@@ -779,10 +697,21 @@ async function migrateLegacySettings(serverHasSettings) {
     const saved = await api('/settings', { method: 'PUT', body });
     globalSettings = saved.settings;
     bindings = saved.bindings;
-    toast('Suas configurações deste navegador agora valem para todos os roteiros e aparelhos.', 4000);
+    toast(t('reader.migrated'), 4000);
   }
   clearLegacySettings(localStorage);
   clearLegacyBindings(localStorage);
+}
+
+function addEndMark() {
+  let end = text.querySelector('.end-mark');
+  if (!end) {
+    if (!scriptTitle) return; // roteiro ainda não carregou
+    end = document.createElement('p');
+    end.className = 'end-mark';
+    text.append(end);
+  }
+  end.textContent = t('reader.end');
 }
 
 async function init() {
@@ -803,10 +732,7 @@ async function init() {
     document.title = `${doc.title} · Glimpse`;
     $('script-title').textContent = doc.title;
     text.innerHTML = renderMarkdown(doc.content);
-    const end = document.createElement('p');
-    end.className = 'end-mark';
-    end.textContent = '• • • FIM • • •';
-    text.append(end);
+    addEndMark();
   } catch (err) {
     if (err.status === 401) return goToLogin();
     text.textContent = err.message;

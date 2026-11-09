@@ -289,16 +289,6 @@ body.reader.playing .hud-btn .i-pause { display: block; }
 }
 .panel-head h2 { margin: 0; font-size: 1.1rem; }
 .panel-body { flex: 1; overflow-y: auto; padding: 4px 16px 32px; overscroll-behavior: contain; }
-.panel section { padding: 12px 0; border-bottom: 1px solid var(--border); }
-.panel section:last-child { border-bottom: 0; }
-.panel h3 { margin: 4px 0 10px; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.field { display: grid; gap: 4px; margin-bottom: 12px; }
-.field > span { display: flex; justify-content: space-between; }
-.field output { color: var(--muted); font-variant-numeric: tabular-nums; }
-.field input[type="range"] { width: 100%; accent-color: var(--accent); }
-.check { display: flex; align-items: center; gap: 10px; min-height: 36px; }
-.check input { width: 18px; height: 18px; accent-color: var(--accent); }
-.note { color: var(--muted); font-size: .85rem; margin: 4px 0 10px; }
 
 .panel-head h2 { flex: 1; }
 .save-status { margin-right: 8px; color: var(--muted); font-size: .8rem; }
@@ -316,80 +306,11 @@ body.reader.playing .hud-btn .i-pause { display: block; }
 .scope-section .note { margin-top: 10px; }
 .scope-section #clear-overrides { width: 100%; }
 
-/* Itens com ajuste próprio do roteiro */
-.overridden > span:first-child::before, .check.overridden::before {
-  content: '●';
-  color: var(--accent);
-  margin-right: 6px;
-}
-.check.overridden::before { margin-right: -2px; }
-.field > span { align-items: center; gap: 8px; }
-.field > span output { margin-left: auto; }
-.reset-override {
-  display: none;
-  min-height: 0;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: .75rem;
-  color: var(--accent);
-  border-color: var(--accent);
-  background: transparent;
-}
-.overridden .reset-override { display: inline-flex; }
-.check .reset-override { margin-left: auto; }
 .panel.scope-script .global-only { opacity: .55; }
 .panel.scope-script .global-only::after {
-  content: 'geral';
+  content: attr(data-global-label);
   margin-left: auto;
   font-size: .7rem;
   color: var(--muted);
 }
 
-.bindings { display: grid; gap: 8px; margin-bottom: 12px; }
-.binding { display: grid; gap: 4px; padding: 8px 0; border-bottom: 1px dashed var(--border); }
-.binding-label { font-weight: 600; font-size: .9rem; }
-.binding-keys { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 28px;
-  padding: 0 4px 0 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  font-family: var(--mono);
-  font-size: .8rem;
-}
-.chip button {
-  min-height: 0;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--muted);
-}
-.chip button:hover { color: var(--danger); }
-.chip-add {
-  min-height: 28px;
-  width: 28px;
-  padding: 0;
-  border-radius: 999px;
-  border-style: dashed;
-}
-
-.capture {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  background: rgb(0 0 0 / .8);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 1.2rem;
-  text-align: center;
-}
-.capture b { color: var(--accent); }

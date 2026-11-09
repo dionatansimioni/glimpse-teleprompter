@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR" data-i18n-pending>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="settingsPage.pageTitle">Configurações · Glimpse</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#121211">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/settings.css">
+  <script type="module" src="/js/settings-page.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><img src="/icon.svg" alt=""> Glimpse</a>
+    <div class="spacer"></div>
+    <div id="app-menu"></div>
+  </header>
+
+  <main class="container settings-page">
+    <div class="toolbar">
+      <a class="button ghost" href="/" data-i18n="common.back">← Voltar</a>
+      <div class="spacer"></div>
+      <span class="status" id="save-status" aria-live="polite"></span>
+    </div>
+    <h1 data-i18n="settingsPage.heading">Configurações do teleprompter</h1>
+    <p class="hint" data-i18n="settingsPage.intro">Valem para todos os roteiros, em todos os aparelhos.</p>
+
+    <div class="settings-sections">
+      <div id="settings-form"></div>
+
+      <section>
+        <h3 data-i18n="shortcuts.title">Atalhos e controles</h3>
+        <p class="note">
+          <span data-i18n="shortcuts.notePre">Clique em</span> <b>+</b>
+          <span data-i18n="shortcuts.notePost">e pressione uma tecla do teclado, do controle Bluetooth ou um botão de gamepad.</span>
+        </p>
+        <div id="bindings" class="bindings"></div>
+        <button type="button" id="reset-keys" data-i18n="shortcuts.reset">Restaurar atalhos padrão</button>
+      </section>
+
+      <section>
+        <button type="button" id="reset-settings" class="danger" data-i18n="panel.resetGlobal">Restaurar configuração geral padrão</button>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

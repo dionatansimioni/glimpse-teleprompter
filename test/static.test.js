@@ -8,6 +8,8 @@ import { startServer } from './helpers.js';
 
 const exec = promisify(execFile);
 const PUBLIC = path.resolve(import.meta.dirname, '../public');
+// IDs criados por módulos JS (ex.: settings-form.js), e não pelo HTML.
+const DYNAMIC_IDS = ['wake-status'];
 
 describe('Páginas e arquivos estáticos', () => {
   let srv;
@@ -18,6 +20,7 @@ describe('Páginas e arquivos estáticos', () => {
     ['/', 'library.js'],
     ['/login', 'login.js'],
     ['/setup', 'setup.js'],
+    ['/settings', 'settings-page.js'],
     ['/read/qualquer-id', 'reader.js'],
   ]) {
     test(`${url} serve a página certa`, async () => {
@@ -68,7 +71,7 @@ describe('Páginas e arquivos estáticos', () => {
   });
 
   test('todos os assets referenciados no HTML existem', async () => {
-    for (const page of ['index.html', 'login.html', 'setup.html', 'read.html']) {
+    for (const page of ['index.html', 'login.html', 'setup.html', 'settings.html', 'read.html']) {
       const html = await fs.readFile(path.join(PUBLIC, page), 'utf8');
       for (const [, url] of html.matchAll(/(?:src|href)="(\/[^"#?]+)"/g)) {
         if (url === '/' || url === '/login') continue;
@@ -79,7 +82,7 @@ describe('Páginas e arquivos estáticos', () => {
   });
 
   test('HTML não tem estilos nem scripts inline (bloqueados pela CSP)', async () => {
-    for (const page of ['index.html', 'login.html', 'setup.html', 'read.html']) {
+    for (const page of ['index.html', 'login.html', 'setup.html', 'settings.html', 'read.html']) {
       const html = await fs.readFile(path.join(PUBLIC, page), 'utf8');
       assert.doesNotMatch(html, /\sstyle="/, page);
       assert.doesNotMatch(html, /<script(?![^>]*\bsrc=)[^>]*>/, page);
@@ -88,13 +91,16 @@ describe('Páginas e arquivos estáticos', () => {
   });
 
   test('IDs usados pelos scripts existem no HTML', async () => {
-    const pairs = [['library.js', 'index.html'], ['login.js', 'login.html'], ['setup.js', 'setup.html'], ['reader.js', 'read.html']];
+    const pairs = [['library.js', 'index.html'], ['login.js', 'login.html'], ['setup.js', 'setup.html'], ['settings-page.js', 'settings.html'], ['reader.js', 'read.html']];
     for (const [js, page] of pairs) {
       const source = await fs.readFile(path.join(PUBLIC, 'js', js), 'utf8');
       const html = await fs.readFile(path.join(PUBLIC, page), 'utf8');
       const ids = [...source.matchAll(/(?:\$|getElementById)\('([\w-]+)'\)/g)].map((m) => m[1]);
       assert.ok(ids.length > 0, js);
-      for (const id of ids) assert.ok(html.includes(`id="${id}"`), `${js} usa #${id}, ausente em ${page}`);
+      for (const id of ids) {
+        if (DYNAMIC_IDS.includes(id)) continue;
+        assert.ok(html.includes(`id="${id}"`), `${js} usa #${id}, ausente em ${page}`);
+      }
     }
   });
 

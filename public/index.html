@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-pending>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Glimpse Teleprompter</title>
+  <title data-i18n="library.pageTitle">Glimpse Teleprompter</title>
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#121211">
@@ -14,19 +14,17 @@
   <header class="topbar">
     <a class="brand" href="/"><img src="/icon.svg" alt=""> Glimpse</a>
     <div class="spacer"></div>
-    <a class="button ghost" id="login-link" href="/login" hidden>Entrar</a>
-    <button class="ghost" id="change-password" hidden>Alterar senha</button>
-    <button class="ghost" id="logout" hidden>Sair</button>
+    <div id="app-menu"></div>
   </header>
 
   <main class="container">
     <!-- Lista de roteiros (staging) -->
     <section id="list-view" hidden>
       <div class="toolbar">
-        <input type="search" id="search" placeholder="Buscar roteiros…" aria-label="Buscar roteiros">
-        <button id="new-script" class="primary admin-only">Novo roteiro</button>
+        <input type="search" id="search" placeholder="Buscar roteiros…" data-i18n-attr="placeholder:library.search;aria-label:library.search">
+        <button id="new-script" class="primary admin-only" data-i18n="library.new">Novo roteiro</button>
         <label class="button admin-only">
-          Importar .md
+          <span data-i18n="library.import">Importar .md</span>
           <input type="file" id="import" accept=".md,.markdown,.txt,text/markdown,text/plain" multiple hidden>
         </label>
       </div>
@@ -37,45 +35,29 @@
     <!-- Editor -->
     <section id="editor-view" hidden>
       <div class="toolbar">
-        <a class="button ghost" href="#/">← Voltar</a>
+        <a class="button ghost" href="#/" data-i18n="common.back">← Voltar</a>
         <div class="tabs" role="tablist">
-          <button role="tab" id="tab-edit" aria-selected="true">Editar</button>
-          <button role="tab" id="tab-preview" aria-selected="false">Visualizar</button>
+          <button role="tab" id="tab-edit" aria-selected="true" data-i18n="editor.tabEdit">Editar</button>
+          <button role="tab" id="tab-preview" aria-selected="false" data-i18n="editor.tabPreview">Visualizar</button>
         </div>
         <div class="spacer"></div>
         <span class="status" id="status"></span>
-        <a class="button" id="read-link" hidden>Abrir no teleprompter</a>
-        <button class="primary" id="save">Salvar</button>
+        <a class="button" id="read-link" hidden data-i18n="editor.openReader">Abrir no teleprompter</a>
+        <button class="primary" id="save" data-i18n="common.save">Salvar</button>
       </div>
-      <input type="text" id="title" class="title-input" placeholder="Título do roteiro" maxlength="200" aria-label="Título">
-      <textarea id="content" class="editor-area" placeholder="Escreva ou cole o roteiro em Markdown…" aria-label="Roteiro"></textarea>
+      <input type="text" id="title" class="title-input" placeholder="Título do roteiro" maxlength="200" data-i18n-attr="placeholder:editor.titlePlaceholder;aria-label:editor.titleLabel">
+      <textarea id="content" class="editor-area" placeholder="Escreva ou cole o roteiro em Markdown…" data-i18n-attr="placeholder:editor.contentPlaceholder;aria-label:editor.contentLabel"></textarea>
       <article id="preview" class="preview md" hidden></article>
       <p class="hint">
-        Markdown: <code># Seção</code> <code>**negrito**</code> <code>*itálico*</code>
-        <code>==destaque==</code> <code>&gt; nota de direção</code> <code>---</code> separador.
-        Atalho: <code>Ctrl+S</code> salva.
+        <span data-i18n="editor.hintMarkdown">Markdown:</span>
+        <code data-i18n="editor.hintSection"># Seção</code> <code data-i18n="editor.hintBold">**negrito**</code>
+        <code data-i18n="editor.hintItalic">*itálico*</code> <code data-i18n="editor.hintHighlight">==destaque==</code>
+        <code data-i18n="editor.hintNote">&gt; nota de direção</code> <code>---</code> <span data-i18n="editor.hintSeparator">separador.</span>
+        <span data-i18n="editor.hintShortcut">Atalho:</span> <code>Ctrl+S</code> <span data-i18n="editor.hintSaves">salva.</span>
       </p>
     </section>
   </main>
 
-  <dialog id="password-dialog" class="dialog">
-    <form id="password-form" novalidate>
-      <h2>Alterar senha</h2>
-      <label class="field-label" for="pw-current">Senha atual</label>
-      <input type="password" id="pw-current" name="current" autocomplete="current-password" required>
-      <label class="field-label" for="pw-new">Nova senha</label>
-      <input type="password" id="pw-new" name="password" autocomplete="new-password" minlength="8" required>
-      <label class="field-label" for="pw-confirm">Confirme a nova senha</label>
-      <input type="password" id="pw-confirm" name="confirm" autocomplete="new-password" minlength="8" required>
-      <p class="hint">Mínimo de 8 caracteres. Os outros dispositivos conectados precisarão entrar de novo.</p>
-      <div class="error" id="password-error" role="alert"></div>
-      <div class="dialog-actions">
-        <button type="button" id="password-cancel">Cancelar</button>
-        <button type="submit" class="primary">Salvar</button>
-      </div>
-    </form>
-  </dialog>
-
-  <div id="drop-hint" class="drop-hint" hidden>Solte os arquivos .md para importar</div>
+  <div id="drop-hint" class="drop-hint" hidden data-i18n="library.drop">Solte os arquivos .md para importar</div>
 </body>
 </html>

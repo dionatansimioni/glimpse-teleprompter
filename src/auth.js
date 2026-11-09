@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { translate } from '../public/js/i18n.js';
 
 const scrypt = promisify(crypto.scrypt);
 
@@ -19,25 +20,28 @@ export const AUTH_FILE = 'auth.json';
 export const MIN_PASSWORD = 8;
 export const MAX_PASSWORD = 256;
 
+// Erro com chave de tradução (server.*); a mensagem padrão é em português.
 export class AuthError extends Error {
-  constructor(status, message) {
-    super(message);
+  constructor(status, key, params = {}) {
+    super(translate('pt', key, params));
     this.status = status;
+    this.key = key;
+    this.params = params;
   }
 }
 
 // Valida a nova senha e a confirmação. Lança AuthError(400) com mensagem amigável.
 export function validateNewPassword(password, confirm) {
   if (typeof password !== 'string' || typeof confirm !== 'string') {
-    throw new AuthError(400, 'Informe a senha e a confirmação.');
+    throw new AuthError(400, 'server.passwordMissing');
   }
   if (password.length < MIN_PASSWORD) {
-    throw new AuthError(400, `A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`);
+    throw new AuthError(400, 'server.passwordTooShort', { min: MIN_PASSWORD });
   }
   if (password.length > MAX_PASSWORD) {
-    throw new AuthError(400, `A senha pode ter no máximo ${MAX_PASSWORD} caracteres.`);
+    throw new AuthError(400, 'server.passwordTooLong', { max: MAX_PASSWORD });
   }
-  if (password !== confirm) throw new AuthError(400, 'A confirmação não confere com a senha.');
+  if (password !== confirm) throw new AuthError(400, 'server.passwordMismatch');
 }
 
 export async function hashPassword(password) {
@@ -149,13 +153,13 @@ export async function createAuth({ dataDir, sessionSecret, cookieSecure }) {
 
     // Setup inicial: só funciona enquanto não existe senha.
     async setup(password, confirm) {
-      if (passwordHash) throw new AuthError(409, 'O Glimpse já foi configurado.');
+      if (passwordHash) throw new AuthError(409, 'server.alreadyConfigured');
       validateNewPassword(password, confirm);
       const hash = await hashPassword(password);
       try {
         await writeAuthFile(hash, 'wx'); // falha se outra requisição configurou antes
       } catch (err) {
-        if (err.code === 'EEXIST') throw new AuthError(409, 'O Glimpse já foi configurado.');
+        if (err.code === 'EEXIST') throw new AuthError(409, 'server.alreadyConfigured');
         throw err;
       }
       setHash(hash);
@@ -163,10 +167,10 @@ export async function createAuth({ dataDir, sessionSecret, cookieSecure }) {
 
     async changePassword(current, password, confirm) {
       if (!(await verifyPassword(current, passwordHash))) {
-        throw new AuthError(401, 'A senha atual está incorreta.');
+        throw new AuthError(401, 'server.currentPasswordWrong');
       }
       validateNewPassword(password, confirm);
-      if (password === current) throw new AuthError(400, 'A nova senha precisa ser diferente da atual.');
+      if (password === current) throw new AuthError(400, 'server.passwordSame');
       const hash = await hashPassword(password);
       await writeAuthFile(hash);
       setHash(hash);

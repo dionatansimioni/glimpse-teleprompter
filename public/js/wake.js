@@ -9,6 +9,8 @@
 //
 // Sem DOM direto: as dependências são injetadas, o que permite testar no Node.
 
+import { t } from './i18n.js';
+
 export const WAKE_MODES = Object.freeze({
   OFF: 'off',
   WAKE_LOCK: 'wakelock',
@@ -120,11 +122,11 @@ export function createScreenWake({
 }
 
 export function wakeStatusText(mode, enabled) {
-  if (!enabled) return 'Desativado: a tela pode apagar sozinha.';
+  if (!enabled) return t('wake.disabled');
   switch (mode) {
-    case WAKE_MODES.WAKE_LOCK: return 'Ativo.';
-    case WAKE_MODES.VIDEO: return 'Ativo (modo de compatibilidade, usado sem HTTPS).';
-    case WAKE_MODES.BLOCKED: return 'Aguardando: toque na tela ou pressione reproduzir para ativar.';
-    default: return 'Inativo no momento; será reativado ao voltar para a página.';
+    case WAKE_MODES.WAKE_LOCK: return t('wake.active');
+    case WAKE_MODES.VIDEO: return t('wake.video');
+    case WAKE_MODES.BLOCKED: return t('wake.blocked');
+    default: return t('wake.off');
   }
 }
