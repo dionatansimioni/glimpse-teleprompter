@@ -1,4 +1,5 @@
-// Configurações do leitor (por dispositivo). Módulo sem DOM: testável no Node.
+// Configurações do leitor. Guardadas no servidor (gerais + ajustes por roteiro).
+// Módulo sem DOM: usado pelo navegador, pelo servidor e pelos testes.
 
 export const SETTINGS_KEY = 'glimpse.settings.v1';
 
@@ -41,39 +42,78 @@ const CHOICES = {
 
 export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-// Normaliza um objeto de configurações qualquer (ex.: lido do localStorage),
-// descartando chaves desconhecidas e valores inválidos.
+// Configurações que valem para todos os roteiros e não podem ser sobrescritas
+// por roteiro (comportamento do aparelho, não da leitura).
+export const GLOBAL_ONLY = Object.freeze(['keepAwake', 'mediaKeys']);
+
+const NO_VALUE = Symbol('inválido');
+
+// Valida e normaliza o valor de uma configuração; NO_VALUE se for inválido.
+function normalize(key, value) {
+  if (!(key in DEFAULT_SETTINGS) || value === undefined || value === null) return NO_VALUE;
+  if (key in NUMBER_RANGES) {
+    const n = typeof value === 'boolean' ? NaN : Number(value);
+    return Number.isFinite(n) ? clamp(n, ...NUMBER_RANGES[key]) : NO_VALUE;
+  }
+  if (key in CHOICES) return CHOICES[key].includes(value) ? value : NO_VALUE;
+  return Boolean(value);
+}
+
+const isObject = (v) => Boolean(v) && typeof v === 'object' && !Array.isArray(v);
+
+// Configuração completa: chaves desconhecidas e valores inválidos viram o padrão.
 export function sanitizeSettings(input) {
   const out = { ...DEFAULT_SETTINGS };
-  if (!input || typeof input !== 'object') return out;
-  for (const [key, def] of Object.entries(DEFAULT_SETTINGS)) {
-    const value = input[key];
-    if (value === undefined) continue;
-    if (key in NUMBER_RANGES) {
-      const n = Number(value);
-      if (Number.isFinite(n)) out[key] = clamp(n, ...NUMBER_RANGES[key]);
-    } else if (key in CHOICES) {
-      if (CHOICES[key].includes(value)) out[key] = value;
-    } else if (typeof def === 'boolean') {
-      out[key] = Boolean(value);
-    }
+  if (!isObject(input)) return out;
+  for (const key of Object.keys(DEFAULT_SETTINGS)) {
+    const value = normalize(key, input[key]);
+    if (value !== NO_VALUE) out[key] = value;
   }
   return out;
 }
 
-export function loadSettings(storage) {
+// Ajustes de um roteiro: só as chaves válidas que ele sobrescreve.
+export function sanitizeOverrides(input) {
+  const out = {};
+  if (!isObject(input)) return out;
+  for (const key of Object.keys(DEFAULT_SETTINGS)) {
+    if (GLOBAL_ONLY.includes(key)) continue;
+    const value = normalize(key, input[key]);
+    if (value !== NO_VALUE) out[key] = value;
+  }
+  return out;
+}
+
+// O que o leitor usa: configuração geral + ajustes do roteiro por cima.
+export function effectiveSettings(global, overrides) {
+  return sanitizeSettings({ ...sanitizeSettings(global), ...sanitizeOverrides(overrides) });
+}
+
+// Onde gravar uma alteração: nos ajustes do roteiro quando o painel está em
+// "Só este roteiro" ou quando o roteiro já sobrescreve essa chave (senão a
+// mudança não teria efeito visível); caso contrário, na configuração geral.
+export function settingTarget(key, scope, overrides = {}) {
+  if (GLOBAL_ONLY.includes(key)) return 'global';
+  if (scope === 'script' || Object.hasOwn(overrides, key)) return 'script';
+  return 'global';
+}
+
+// Configurações antigas, salvas só no navegador (versões anteriores do Glimpse).
+// Retorna null se não houver nada salvo.
+export function readLegacySettings(storage) {
   try {
-    return sanitizeSettings(JSON.parse(storage?.getItem(SETTINGS_KEY) ?? 'null'));
+    const raw = storage?.getItem(SETTINGS_KEY);
+    return raw ? sanitizeSettings(JSON.parse(raw)) : null;
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    return null;
   }
 }
 
-export function saveSettings(storage, settings) {
+export function clearLegacySettings(storage) {
   try {
-    storage?.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    storage?.removeItem(SETTINGS_KEY);
   } catch {
-    /* armazenamento indisponível (aba anônima etc.) */
+    /* armazenamento indisponível */
   }
 }
 

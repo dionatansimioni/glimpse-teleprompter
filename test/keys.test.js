@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ACTIONS, ACTION_IDS, defaultBindings, bindingFromKeyEvent, bindingLabel, findAction,
-  assignBinding, removeBinding, sanitizeBindings, loadBindings, saveBindings,
+  assignBinding, removeBinding, sanitizeBindings, readLegacyBindings, clearLegacyBindings, KEYS_STORAGE,
   gamepadButtonBinding, gamepadAxisBinding, isRepeatable,
 } from '../public/js/keys.js';
 
@@ -94,12 +94,17 @@ test('uma ação pode ficar sem nenhuma tecla', () => {
   assert.deepEqual(b.togglePlay, []);
 });
 
-test('salvar e carregar atalhos', () => {
+test('atalhos antigos do navegador são lidos para migração e depois apagados', () => {
   const m = new Map();
-  const storage = { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v) };
+  const storage = { getItem: (k) => m.get(k) ?? null, removeItem: (k) => m.delete(k) };
+  assert.equal(readLegacyBindings(storage), null, 'nada salvo');
   const { bindings } = assignBinding(defaultBindings(), 'reverse', 'pad:b7');
-  saveBindings(storage, bindings);
-  assert.equal(findAction(loadBindings(storage), 'pad:b7'), 'reverse');
+  m.set(KEYS_STORAGE, JSON.stringify(bindings));
+  assert.equal(findAction(readLegacyBindings(storage), 'pad:b7'), 'reverse');
+  clearLegacyBindings(storage);
+  assert.equal(readLegacyBindings(storage), null);
+  m.set(KEYS_STORAGE, '{quebrado');
+  assert.equal(readLegacyBindings(storage), null);
 });
 
 test('ações repetíveis (segurar a tecla) são só as contínuas', () => {

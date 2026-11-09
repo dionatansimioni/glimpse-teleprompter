@@ -61,7 +61,8 @@ function renderItem(script) {
   title.textContent = script.title;
   const meta = document.createElement('span');
   meta.className = 'script-meta';
-  meta.textContent = `${formatDate(script.updatedAt)} · ${script.words} palavras · ~${readingMinutes(script.words)} min`;
+  meta.textContent = `${formatDate(script.updatedAt)} · ${script.words} palavras · ~${readingMinutes(script.words)} min`
+    + (script.customized ? ' · ajustes próprios' : '');
   main.append(title, meta);
 
   const actions = document.createElement('div');

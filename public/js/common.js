@@ -1,13 +1,14 @@
 import { marked } from '/vendor/marked/marked.esm.js';
 import DOMPurify from '/vendor/dompurify/purify.es.mjs';
 
-export async function api(path, { method = 'GET', body } = {}) {
+export async function api(path, { method = 'GET', body, keepalive = false } = {}) {
   const headers = { 'x-glimpse': '1' };
   if (body !== undefined) headers['content-type'] = 'application/json';
   const res = await fetch(`/api${path}`, {
     method,
     headers,
     credentials: 'same-origin',
+    keepalive,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = res.status === 204 ? null : await res.json().catch(() => null);

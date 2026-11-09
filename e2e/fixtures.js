@@ -1,5 +1,7 @@
 import { test as base, expect } from '@playwright/test';
 import { E2E_PASSWORD } from '../playwright.config.js';
+import { DEFAULT_SETTINGS } from '../public/js/settings.js';
+import { defaultBindings } from '../public/js/keys.js';
 
 export { expect, E2E_PASSWORD };
 
@@ -30,14 +32,21 @@ export const test = base.extend({
     expect(errors, 'erros no console do navegador').toEqual([]);
   },
 
-  // Página já autenticada como administrador.
+  // Página já autenticada como administrador, com a configuração geral
+  // do teleprompter e os atalhos de volta ao padrão (os testes rodam em série).
   adminPage: async ({ page }, use) => {
     const res = await page.request.post('/api/login', {
       headers: { 'x-glimpse': '1' },
       data: { password: E2E_PASSWORD },
     });
     expect(res.ok()).toBeTruthy();
+    await putSettings(page, { settings: DEFAULT_SETTINGS, bindings: defaultBindings() });
     await use(page);
+  },
+
+  // Define a configuração geral: padrão + o que for passado.
+  setSettings: async ({ adminPage }, use) => {
+    await use((partial = {}) => putSettings(adminPage, { settings: { ...DEFAULT_SETTINGS, ...partial } }));
   },
 
   // Cria um roteiro pela API e devolve o documento.
@@ -52,6 +61,17 @@ export const test = base.extend({
     });
   },
 });
+
+async function putSettings(page, data) {
+  const res = await page.request.put('/api/settings', { headers: { 'x-glimpse': '1' }, data });
+  expect(res.ok()).toBeTruthy();
+  return res.json();
+}
+
+// Espera as alterações do painel serem gravadas no servidor.
+export async function waitSaved(page) {
+  await expect(page.locator('#save-status')).toHaveText('Salvo');
+}
 
 // Deslocamento vertical atual do texto (translateY do scroller).
 export async function scrollOffset(page) {

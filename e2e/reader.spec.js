@@ -1,18 +1,13 @@
-import { test, expect, scrollOffset } from './fixtures.js';
+import { test, expect, scrollOffset, waitSaved } from './fixtures.js';
 
 test.describe('Teleprompter', () => {
   let doc;
-  test.beforeEach(async ({ createScript, page }) => {
+  test.beforeEach(async ({ createScript, setSettings, page }) => {
     doc = await createScript();
+    // Sem contagem regressiva para os testes ficarem rápidos.
+    await setSettings({ countdown: 0, speed: 40 });
     await page.goto(`/read/${doc.id}`);
     await expect(page.locator('#text h1').first()).toHaveText('Abertura');
-    // Sem contagem regressiva para os testes ficarem rápidos.
-    await page.evaluate(() => {
-      const s = JSON.parse(localStorage.getItem('glimpse.settings.v1') || '{}');
-      localStorage.setItem('glimpse.settings.v1', JSON.stringify({ ...s, countdown: 0, speed: 40 }));
-    });
-    await page.reload();
-    await expect(page.locator('#text h1').first()).toBeVisible();
   });
 
   test('mostra o título e renderiza o Markdown', async ({ page }) => {
@@ -38,12 +33,10 @@ test.describe('Teleprompter', () => {
     expect(await scrollOffset(page)).toBe(paused);
   });
 
-  test('contagem regressiva antes de começar', async ({ page }) => {
-    await page.evaluate(() => {
-      const s = JSON.parse(localStorage.getItem('glimpse.settings.v1'));
-      localStorage.setItem('glimpse.settings.v1', JSON.stringify({ ...s, countdown: 2 }));
-    });
+  test('contagem regressiva antes de começar', async ({ page, setSettings }) => {
+    await setSettings({ countdown: 2, speed: 40 });
     await page.reload();
+    await expect(page.locator('#text h1').first()).toBeVisible();
     await page.click('#btn-play');
     await expect(page.locator('#countdown')).toBeVisible();
     await expect(page.locator('#countdown')).toHaveText('2');
@@ -95,6 +88,7 @@ test.describe('Teleprompter', () => {
     expect(await transform()).toBe(-1);
     await expect(page.locator('body')).toHaveClass(/theme-yellow/);
 
+    await waitSaved(page);
     await page.reload();
     await expect(page.locator('#text h1').first()).toBeVisible();
     expect(await fontSize()).toBe('100px');
@@ -102,11 +96,8 @@ test.describe('Teleprompter', () => {
     await expect(page.locator('body')).toHaveClass(/theme-yellow/);
   });
 
-  test('direção invertida: o texto desce', async ({ page }) => {
-    await page.evaluate(() => {
-      const s = JSON.parse(localStorage.getItem('glimpse.settings.v1'));
-      localStorage.setItem('glimpse.settings.v1', JSON.stringify({ ...s, direction: 'down' }));
-    });
+  test('direção invertida: o texto desce', async ({ page, setSettings }) => {
+    await setSettings({ countdown: 0, speed: 40, direction: 'down' });
     await page.reload();
     await expect(page.locator('#text h1').first()).toBeVisible();
     await page.click('#btn-play'); // começa do fim
@@ -132,6 +123,7 @@ test.describe('Teleprompter', () => {
     await page.keyboard.press('KeyM');
     await expect(page.locator('body')).toHaveClass(/playing/);
 
+    await waitSaved(page);
     await page.reload();
     await expect(page.locator('#text h1').first()).toBeVisible();
     await page.keyboard.press('KeyM');

@@ -2,6 +2,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { sanitizeOverrides } from '../public/js/settings.js';
 
 const ID_RE = /^[A-Za-z0-9_-]{8,32}$/;
 
@@ -36,12 +37,13 @@ export async function createStore(dataDir) {
     await fs.rename(tmp, fileFor(doc.id));
   }
 
-  const summarize = ({ id, title, content, createdAt, updatedAt }) => ({
+  const summarize = ({ id, title, content, createdAt, updatedAt, settings }) => ({
     id,
     title,
     createdAt,
     updatedAt,
     words: countWords(content),
+    customized: Object.keys(settings ?? {}).length > 0, // tem ajustes próprios
   });
 
   return {
@@ -54,7 +56,10 @@ export async function createStore(dataDir) {
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     },
 
-    get: read,
+    async get(id) {
+      const doc = await read(id);
+      return doc && { ...doc, settings: sanitizeOverrides(doc.settings) };
+    },
 
     async create({ title, content }) {
       const now = new Date().toISOString();
@@ -73,6 +78,16 @@ export async function createStore(dataDir) {
       const doc = await read(id);
       if (!doc) return null;
       Object.assign(doc, { title, content, updatedAt: new Date().toISOString() });
+      await write(doc);
+      return doc;
+    },
+
+    // Ajustes do teleprompter só deste roteiro ({} remove todos).
+    // Não altera updatedAt: ajustar a leitura não é editar o roteiro.
+    async updateSettings(id, overrides) {
+      const doc = await read(id);
+      if (!doc) return null;
+      doc.settings = sanitizeOverrides(overrides);
       await write(doc);
       return doc;
     },

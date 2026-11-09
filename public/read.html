@@ -61,10 +61,20 @@
   <aside id="panel" class="panel" hidden aria-label="Configurações">
     <header class="panel-head">
       <h2>Configurações</h2>
+      <span class="save-status" id="save-status" aria-live="polite"></span>
       <button class="ghost" id="panel-close" aria-label="Fechar">✕</button>
     </header>
 
     <div class="panel-body">
+      <section class="scope-section">
+        <div class="scope" id="scope-group" role="radiogroup" aria-label="Aplicar as alterações a">
+          <button type="button" role="radio" data-scope="global" aria-checked="true">Todos os roteiros</button>
+          <button type="button" role="radio" data-scope="script" aria-checked="false">Só este roteiro</button>
+        </div>
+        <p class="note" id="scope-note"></p>
+        <button type="button" id="clear-overrides" hidden>Remover ajustes deste roteiro</button>
+      </section>
+
       <section>
         <h3>Rolagem</h3>
         <label class="field">
@@ -152,14 +162,14 @@
         <h3>Atalhos e controles</h3>
         <p class="note">
           Clique em <b>+</b> e pressione uma tecla do teclado, do controle Bluetooth ou um botão de gamepad.
-          As configurações ficam salvas neste dispositivo.
+          Os atalhos valem para todos os roteiros e aparelhos.
         </p>
         <div id="bindings" class="bindings"></div>
         <button id="reset-keys">Restaurar atalhos padrão</button>
       </section>
 
       <section>
-        <button id="reset-settings" class="danger">Restaurar configurações padrão</button>
+        <button id="reset-settings" class="danger">Restaurar configuração geral padrão</button>
       </section>
     </div>
   </aside>

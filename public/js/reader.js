@@ -1,10 +1,11 @@
-import { api, goToLogin, renderMarkdown, toast } from './common.js';
+import { api, getSession, goToLogin, renderMarkdown, toast } from './common.js';
 import {
-  loadSettings, saveSettings, sanitizeSettings, DEFAULT_SETTINGS,
+  sanitizeSettings, sanitizeOverrides, effectiveSettings, settingTarget, GLOBAL_ONLY,
+  DEFAULT_SETTINGS, readLegacySettings, clearLegacySettings,
   pixelsPerSecond, formatDuration, clamp,
 } from './settings.js';
 import {
-  ACTIONS, loadBindings, saveBindings, defaultBindings, bindingFromKeyEvent,
+  ACTIONS, readLegacyBindings, clearLegacyBindings, defaultBindings, bindingFromKeyEvent,
   gamepadButtonBinding, gamepadAxisBinding, bindingLabel, findAction,
   assignBinding, removeBinding, isRepeatable, actionLabel,
 } from './keys.js';
@@ -24,9 +25,17 @@ const countdownEl = $('countdown');
 const flashEl = $('speed-flash');
 const captureEl = $('capture');
 
-let settings = loadSettings(localStorage);
-let bindings = loadBindings(localStorage);
+const scriptId = decodeURIComponent(location.pathname.split('/').filter(Boolean).pop() ?? '');
 let scriptTitle = '';
+
+// Configurações vêm do servidor: a geral vale para todos os roteiros e
+// aparelhos; os ajustes do roteiro (overrides) sobrescrevem só o que definem.
+let globalSettings = { ...DEFAULT_SETTINGS };
+let overrides = {};
+let settings = { ...DEFAULT_SETTINGS }; // efetiva = geral + ajustes do roteiro
+let bindings = defaultBindings();
+let scope = 'global'; // onde as alterações são gravadas: 'global' | 'script'
+let canSave = false;  // só o administrador grava no servidor
 
 // ---------- Estado da rolagem ----------
 let pos = 0;          // deslocamento em px a partir do início do texto
@@ -185,10 +194,137 @@ function flash(message) {
 }
 
 // ---------- Configurações ----------
-function setSetting(key, value) {
-  settings = sanitizeSettings({ ...settings, [key]: value });
-  saveSettings(localStorage, settings);
+function recompute() {
+  settings = effectiveSettings(globalSettings, overrides);
   applySettings();
+}
+
+function setSetting(key, value) {
+  if (settingTarget(key, scope, overrides) === 'script') {
+    overrides = sanitizeOverrides({ ...overrides, [key]: value });
+    scheduleSave('script');
+  } else {
+    globalSettings = sanitizeSettings({ ...globalSettings, [key]: value });
+    scheduleSave('global');
+  }
+  recompute();
+}
+
+function clearOverride(key) {
+  const { [key]: _removed, ...rest } = overrides;
+  overrides = rest;
+  scheduleSave('script');
+  recompute();
+}
+
+// ---------- Gravação no servidor (com atraso, para não gravar a cada pixel do slider) ----------
+const saveTimers = {};
+let readOnlyWarned = false;
+
+function setSaveStatus(text) {
+  $('save-status').textContent = text;
+}
+
+function scheduleSave(what) {
+  if (!canSave) {
+    if (!readOnlyWarned) toast('Modo leitura: as alterações valem só nesta tela. Entre como administrador para salvar.', 4000);
+    readOnlyWarned = true;
+    return;
+  }
+  setSaveStatus('Salvando…');
+  clearTimeout(saveTimers[what]);
+  saveTimers[what] = setTimeout(() => flushSave(what), 400);
+}
+
+async function flushSave(what, { keepalive = false } = {}) {
+  clearTimeout(saveTimers[what]);
+  delete saveTimers[what];
+  try {
+    if (what === 'global') await api('/settings', { method: 'PUT', body: { settings: globalSettings }, keepalive });
+    else if (what === 'bindings') await api('/settings', { method: 'PUT', body: { bindings }, keepalive });
+    else await api(`/scripts/${encodeURIComponent(scriptId)}/settings`, { method: 'PUT', body: { settings: overrides }, keepalive });
+    if (!Object.keys(saveTimers).length) setSaveStatus('Salvo');
+  } catch (err) {
+    setSaveStatus('Erro ao salvar');
+    toast(err.status === 401
+      ? 'Sessão expirada: entre novamente para salvar as configurações.'
+      : `Não foi possível salvar as configurações: ${err.message}`, 4000);
+  }
+}
+
+// Ao sair da página, grava o que estiver pendente.
+function flushAll() {
+  for (const what of Object.keys(saveTimers)) flushSave(what, { keepalive: true });
+}
+window.addEventListener('pagehide', flushAll);
+
+// Ao voltar para a aba, busca de novo (pode ter mudado em outro aparelho).
+async function reloadSettings() {
+  if (Object.keys(saveTimers).length) return;
+  try {
+    const [global, doc] = await Promise.all([api('/settings'), api(`/scripts/${encodeURIComponent(scriptId)}`)]);
+    globalSettings = global.settings;
+    bindings = global.bindings;
+    overrides = doc.settings ?? {};
+    recompute();
+    if (!panel.hidden) renderBindings();
+  } catch {
+    /* mantém o que já está na tela */
+  }
+}
+
+// ---------- Painel: escopo (todos os roteiros x só este roteiro) ----------
+function setScope(next) {
+  scope = next;
+  syncForm();
+}
+
+for (const button of panel.querySelectorAll('[data-scope]')) {
+  button.addEventListener('click', () => setScope(button.dataset.scope));
+}
+
+function renderScope() {
+  const count = Object.keys(overrides).length;
+  for (const button of panel.querySelectorAll('[data-scope]')) {
+    button.setAttribute('aria-checked', String(button.dataset.scope === scope));
+  }
+  panel.classList.toggle('scope-script', scope === 'script');
+  $('scope-group').hidden = !canSave;
+  $('reset-settings').hidden = !canSave || scope !== 'global';
+  $('clear-overrides').hidden = !canSave || count === 0;
+  let note;
+  if (!canSave) {
+    note = 'Modo leitura: entre como administrador para salvar as configurações.';
+  } else if (scope === 'script') {
+    note = `As alterações valem só para "${scriptTitle}". Itens marcados com ● sobrescrevem a configuração geral.`;
+  } else {
+    note = 'As alterações valem para todos os roteiros, em todos os aparelhos.';
+    if (count) {
+      note += ` Este roteiro tem ${count === 1 ? '1 ajuste próprio' : `${count} ajustes próprios`} (●), que continua${count === 1 ? '' : 'm'} valendo.`;
+    }
+  }
+  $('scope-note').textContent = note;
+}
+
+// Botão "voltar à configuração geral" em cada item que um roteiro pode sobrescrever.
+for (const input of panel.querySelectorAll('[data-setting]')) {
+  const key = input.dataset.setting;
+  const row = input.closest('.field, .check');
+  if (GLOBAL_ONLY.includes(key)) {
+    row.classList.add('global-only');
+    continue;
+  }
+  const reset = document.createElement('button');
+  reset.type = 'button';
+  reset.className = 'reset-override';
+  reset.textContent = 'usar geral';
+  reset.title = 'Remover o ajuste deste roteiro e voltar à configuração geral';
+  reset.dataset.reset = key;
+  reset.addEventListener('click', (event) => {
+    event.preventDefault();
+    clearOverride(key);
+  });
+  (row.querySelector(':scope > span') ?? row).append(reset);
 }
 
 function applySettings() {
@@ -213,10 +349,13 @@ function applySettings() {
 
 function syncForm() {
   for (const input of panel.querySelectorAll('[data-setting]')) {
-    const value = settings[input.dataset.setting];
+    const key = input.dataset.setting;
+    const value = settings[key];
     if (input.type === 'checkbox') input.checked = value;
     else input.value = String(value);
+    input.closest('.field, .check').classList.toggle('overridden', Object.hasOwn(overrides, key));
   }
+  renderScope();
   for (const out of panel.querySelectorAll('output[data-for]')) {
     out.textContent = `${settings[out.dataset.for]}${out.dataset.unit ?? ''}`;
   }
@@ -242,10 +381,16 @@ function closePanel() {
 }
 $('panel-close').addEventListener('click', closePanel);
 $('reset-settings').addEventListener('click', () => {
-  if (!confirm('Restaurar todas as configurações de leitura?')) return;
-  settings = { ...DEFAULT_SETTINGS };
-  saveSettings(localStorage, settings);
-  applySettings();
+  if (!confirm('Restaurar a configuração geral padrão? Isso vale para todos os roteiros.')) return;
+  globalSettings = { ...DEFAULT_SETTINGS };
+  scheduleSave('global');
+  recompute();
+});
+$('clear-overrides').addEventListener('click', () => {
+  if (!confirm('Remover os ajustes próprios deste roteiro? Ele volta a seguir a configuração geral.')) return;
+  overrides = {};
+  scheduleSave('script');
+  recompute();
 });
 
 // ---------- Tela cheia ----------
@@ -312,8 +457,13 @@ for (const type of ['pointerdown', 'keydown', 'click']) {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') wake.refresh();
-  else if (playing) pause();
+  if (document.visibilityState === 'visible') {
+    wake.refresh();
+    reloadSettings();
+  } else {
+    if (playing) pause();
+    flushAll();
+  }
 });
 
 // ---------- Ações ----------
@@ -569,7 +719,7 @@ function renderBindings() {
       remove.setAttribute('aria-label', `Remover ${bindingLabel(binding)} de ${action.label}`);
       remove.addEventListener('click', () => {
         bindings = removeBinding(bindings, action.id, binding);
-        saveBindings(localStorage, bindings);
+        scheduleSave('bindings');
         renderBindings();
       });
       chip.append(remove);
@@ -601,7 +751,7 @@ function endCapture(binding = null) {
   if (!binding || !actionId) return;
   const result = assignBinding(bindings, actionId, binding);
   bindings = result.bindings;
-  saveBindings(localStorage, bindings);
+  scheduleSave('bindings');
   renderBindings();
   toast(result.movedFrom
     ? `${bindingLabel(binding)} movida de "${actionLabel(result.movedFrom)}" para "${actionLabel(actionId)}".`
@@ -611,17 +761,44 @@ function endCapture(binding = null) {
 $('capture-cancel').addEventListener('click', () => endCapture());
 $('reset-keys').addEventListener('click', () => {
   bindings = defaultBindings();
-  saveBindings(localStorage, bindings);
+  scheduleSave('bindings');
   renderBindings();
   toast('Atalhos restaurados.');
 });
 
 // ---------- Início ----------
+// Versões antigas guardavam as configurações só no navegador: leva para o servidor.
+async function migrateLegacySettings(serverHasSettings) {
+  const legacySettings = readLegacySettings(localStorage);
+  const legacyBindings = readLegacyBindings(localStorage);
+  if (!legacySettings && !legacyBindings) return;
+  if (!serverHasSettings) {
+    const body = {};
+    if (legacySettings) body.settings = legacySettings;
+    if (legacyBindings) body.bindings = legacyBindings;
+    const saved = await api('/settings', { method: 'PUT', body });
+    globalSettings = saved.settings;
+    bindings = saved.bindings;
+    toast('Suas configurações deste navegador agora valem para todos os roteiros e aparelhos.', 4000);
+  }
+  clearLegacySettings(localStorage);
+  clearLegacyBindings(localStorage);
+}
+
 async function init() {
-  const id = decodeURIComponent(location.pathname.split('/').filter(Boolean).pop() ?? '');
   applySettings();
   try {
-    const doc = await api(`/scripts/${encodeURIComponent(id)}`);
+    const [session, global, doc] = await Promise.all([
+      getSession(),
+      api('/settings'),
+      api(`/scripts/${encodeURIComponent(scriptId)}`),
+    ]);
+    canSave = session.authenticated;
+    globalSettings = global.settings;
+    bindings = global.bindings;
+    overrides = doc.settings ?? {};
+    if (canSave) await migrateLegacySettings(global.saved).catch(() => {});
+    recompute();
     scriptTitle = doc.title;
     document.title = `${doc.title} · Glimpse`;
     $('script-title').textContent = doc.title;

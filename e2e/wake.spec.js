@@ -60,17 +60,12 @@ test.describe('Manter a tela acesa', () => {
     await expect(page.locator('body')).toHaveAttribute('data-wake', 'off');
   });
 
-  test('o vídeo não atrapalha o toque para reproduzir/pausar', async ({ page }) => {
+  test('o vídeo não atrapalha o toque para reproduzir/pausar', async ({ page, setSettings }) => {
     await page.addInitScript(() => {
       Object.defineProperty(Navigator.prototype, 'wakeLock', { configurable: true, get: () => undefined });
     });
-    await page.evaluate(() => 0);
+    await setSettings({ countdown: 0 });
     await page.goto(`/read/${doc.id}`);
-    await page.evaluate(() => {
-      const s = JSON.parse(localStorage.getItem('glimpse.settings.v1') || '{}');
-      localStorage.setItem('glimpse.settings.v1', JSON.stringify({ ...s, countdown: 0 }));
-    });
-    await page.reload();
     await expect(page.locator('#text h1, #text p').first()).toBeVisible();
     await page.locator('#stage').click();
     await expect(page.locator('body')).toHaveClass(/playing/);

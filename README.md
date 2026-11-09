@@ -5,7 +5,8 @@ Teleprompter web, open source e auto-hospedado. Você sobe seus roteiros em Mark
 - **Área de staging**: crie, edite, importe (`.md`, arrastar e soltar) e baixe roteiros, cada um com título.
 - **Teleprompter**: velocidade, tamanho do texto, espaçamento, margens, alinhamento, fonte, cores, espelhamento horizontal e vertical, direção da rolagem, guia de leitura, contagem regressiva e tempo restante.
 - **Tela cheia** (e instalável como app pela opção "Adicionar à tela inicial").
-- **Atalhos customizáveis**: teclado, controles Bluetooth (teclas, page-turners e botões de mídia) e gamepads. Cada dispositivo guarda os próprios atalhos e configurações.
+- **Configuração universal**: tamanho do texto, velocidade, espelhamento, atalhos etc. ficam salvos no servidor e valem para todos os roteiros, em qualquer aparelho. Quando precisar, um roteiro pode ter **ajustes próprios** que sobrescrevem só os itens escolhidos.
+- **Atalhos customizáveis**: teclado, controles Bluetooth (teclas, page-turners e botões de mídia) e gamepads.
 - **Toque**: tocar na tela reproduz/pausa e arrastar move o texto.
 - Interface minimalista, sem dependências externas em tempo de execução (funciona numa rede local sem internet).
 
@@ -62,6 +63,17 @@ A senha é guardada apenas como hash (scrypt) em `/data/auth.json`. As sessões 
 1. No PC, entre em `http://servidor:3000`, faça login (ou crie a senha, no primeiro acesso) e clique em **Novo roteiro** ou **Importar .md** (ou arraste arquivos para a página).
 2. No celular ou tablet, abra o mesmo endereço, faça login e toque em **Ler**.
 3. Toque em ⚙ para ajustar texto, velocidade, espelhamento e atalhos. Use o botão de tela cheia ou adicione o Glimpse à tela inicial.
+
+### Configuração geral x ajustes de um roteiro
+
+No painel ⚙ do leitor, escolha onde as alterações são gravadas:
+
+- **Todos os roteiros** (padrão): muda a configuração geral, que vale para todos os roteiros e aparelhos.
+- **Só este roteiro**: cria ajustes próprios do roteiro aberto, que sobrescrevem a configuração geral apenas nos itens alterados (marcados com ●). O resto continua seguindo a geral.
+
+Cada item sobrescrito tem o botão **usar geral**, e **Remover ajustes deste roteiro** apaga todos de uma vez. Na biblioteca, roteiros com ajustes aparecem com a indicação *ajustes próprios*. *Manter a tela acesa*, *Capturar botões de mídia* e os atalhos são sempre gerais.
+
+As configurações ficam em `/data/settings.json` e os ajustes dentro do arquivo de cada roteiro. Configurações salvas no navegador por versões anteriores são migradas automaticamente para o servidor.
 
 O título do roteiro importado vem do front matter (`title: ...`), do primeiro `# Título` ou do nome do arquivo.
 

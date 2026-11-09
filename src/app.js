@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AuthError, createAuth } from './auth.js';
 import { createStore } from './store.js';
+import { createSettingsStore } from './settings-store.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -64,6 +65,7 @@ export async function createApp({
   trustProxy = false,
 }) {
   const store = await createStore(dataDir);
+  const settingsStore = await createSettingsStore(dataDir);
   const auth = await createAuth({ dataDir, sessionSecret, cookieSecure });
 
   const app = express();
@@ -159,6 +161,31 @@ export async function createApp({
     const doc = await store.update(req.params.id, parseScript(req.body));
     if (!doc) throw new HttpError(404, 'Roteiro não encontrado.');
     res.json(doc);
+  });
+
+  api.put('/scripts/:id/settings', requireAdmin, async (req, res) => {
+    const overrides = req.body?.settings;
+    if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides)) {
+      throw new HttpError(400, 'Envie os ajustes em "settings".');
+    }
+    const doc = await store.updateSettings(req.params.id, overrides);
+    if (!doc) throw new HttpError(404, 'Roteiro não encontrado.');
+    res.json({ settings: doc.settings });
+  });
+
+  // Configuração geral do teleprompter e atalhos: valem para todos os roteiros.
+  api.get('/settings', requireReader, async (req, res) => {
+    res.json(await settingsStore.get());
+  });
+
+  api.put('/settings', requireAdmin, async (req, res) => {
+    const { settings, bindings } = req.body ?? {};
+    const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+    if ((settings !== undefined && !isObj(settings)) || (bindings !== undefined && !isObj(bindings))
+      || (settings === undefined && bindings === undefined)) {
+      throw new HttpError(400, 'Envie "settings" e/ou "bindings".');
+    }
+    res.json(await settingsStore.update({ settings, bindings }));
   });
 
   api.delete('/scripts/:id', requireAdmin, async (req, res) => {

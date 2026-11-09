@@ -1,4 +1,5 @@
-// Atalhos de teclado / controles Bluetooth / gamepad. Módulo sem DOM: testável no Node.
+// Atalhos de teclado / controles Bluetooth / gamepad. Guardados no servidor e
+// valem para todos os roteiros. Módulo sem DOM: usado pelo navegador, servidor e testes.
 
 export const KEYS_STORAGE = 'glimpse.keys.v1'; // gitleaks:allow (nome de chave do localStorage, não é segredo)
 
@@ -104,17 +105,20 @@ export function sanitizeBindings(input) {
   return out;
 }
 
-export function loadBindings(storage) {
+// Atalhos antigos, salvos só no navegador (versões anteriores do Glimpse).
+// Retorna null se não houver nada salvo.
+export function readLegacyBindings(storage) {
   try {
-    return sanitizeBindings(JSON.parse(storage?.getItem(KEYS_STORAGE) ?? 'null'));
+    const raw = storage?.getItem(KEYS_STORAGE);
+    return raw ? sanitizeBindings(JSON.parse(raw)) : null;
   } catch {
-    return defaultBindings();
+    return null;
   }
 }
 
-export function saveBindings(storage, bindings) {
+export function clearLegacyBindings(storage) {
   try {
-    storage?.setItem(KEYS_STORAGE, JSON.stringify(bindings));
+    storage?.removeItem(KEYS_STORAGE);
   } catch {
     /* armazenamento indisponível */
   }
