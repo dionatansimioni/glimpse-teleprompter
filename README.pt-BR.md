@@ -14,6 +14,7 @@ Teleprompter web, open source e auto-hospedado. Você sobe seus roteiros em Mark
 - **Tela cheia** (e instalável como app pela opção "Adicionar à tela inicial").
 - **Configuração universal**: tamanho do texto, velocidade, espelhamento, atalhos etc. ficam salvos no servidor e valem para todos os roteiros, em qualquer aparelho. Quando precisar, um roteiro pode ter **ajustes próprios** que sobrescrevem só os itens escolhidos.
 - **Atalhos customizáveis**: teclado, controles Bluetooth (teclas, page-turners e botões de mídia) e gamepads.
+- **Controle remoto**: conduza o leitor do celular por um laptop ou desktop (reproduzir/pausar, velocidade, tamanho do texto, voltar/avançar trecho).
 - **Toque**: tocar na tela reproduz/pausa e arrastar move o texto.
 - **Português e inglês**: o idioma é escolhido na tela de login (e pode ser trocado no menu).
 - **Tela sempre acesa** durante a leitura, mesmo sem HTTPS.
@@ -75,7 +76,21 @@ A senha é guardada apenas como hash (scrypt) em `/data/auth.json`. As sessões 
 
 ### Menu e idioma
 
-O menu no canto superior direito da biblioteca tem **Configurações do teleprompter** (a configuração geral e os atalhos, sem precisar abrir um roteiro), **Idioma** (Português / English), **Alterar senha** e **Sair**. O idioma também é escolhido na tela de login e fica salvo em cada aparelho; sem escolha, o Glimpse usa o idioma do navegador.
+O menu no canto superior direito da biblioteca tem **Configurações do teleprompter** (a configuração geral e os atalhos, sem precisar abrir um roteiro), **Controle remoto**, **Idioma** (Português / English), **Alterar senha** e **Sair**. O idioma também é escolhido na tela de login e fica salvo em cada aparelho; sem escolha, o Glimpse usa o idioma do navegador.
+
+### Controle remoto
+
+<img src="site/assets/screens/pt-remote.png" alt="Página do controle remoto" width="420" align="right">
+
+Controle por um laptop ou desktop um leitor aberto em outro aparelho, como o celular preso na câmera:
+
+1. Abra o roteiro no leitor do celular (logado como administrador).
+2. No computador, abra o menu → **Controle remoto** e escolha o leitor na lista (se só houver um aberto, ele é escolhido automaticamente).
+3. Use os botões: **reproduzir / pausar**, **velocidade − / +**, **tamanho do texto − / +** e **voltar / avançar trecho**. Os atalhos de teclado configurados também funcionam nessa página, então um teclado ou controle Bluetooth ligado ao computador conduz o celular.
+
+A página mostra o estado do leitor (reproduzindo ou pausado, velocidade, tamanho e quanto já foi lido). Funciona por HTTP na rede local; se a conexão cair, o celular continua rolando sozinho e o controle reconecta automaticamente.
+
+<br clear="right">
 
 ### Configuração geral x ajustes de um roteiro
 
@@ -156,6 +171,7 @@ public/         interface (HTML/CSS/JS puro, sem build)
   js/keys.js    atalhos (teclado, Bluetooth, gamepad)
   js/settings.js configurações de leitura
   js/i18n.js    idiomas (js/locales/pt.js e en.js)
+  js/remote.js  página do controle remoto (servidor: src/remote.js)
 site/           site do projeto (GitHub Pages)
 scripts/        testes e2e e capturas de tela via Docker
 test/           testes unitários e de API (node:test)

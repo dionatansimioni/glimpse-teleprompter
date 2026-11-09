@@ -14,6 +14,7 @@ Open source, self-hosted web teleprompter. Upload your scripts in Markdown from 
 - **Full screen** (and installable as an app with "Add to Home Screen").
 - **Universal settings**: text size, speed, mirroring, shortcuts and so on are saved on the server and apply to every script, on any device. When needed, a script can have **custom settings** that override only the items you choose.
 - **Customizable shortcuts**: keyboard, Bluetooth remotes (keys, page turners and media buttons) and gamepads.
+- **Remote control**: drive the reader on your phone from a laptop or desktop (play/pause, speed, text size, jump back/forward).
 - **Touch**: tap the screen to play/pause, drag to move the text.
 - **English and Portuguese**: pick the language on the sign-in screen (and switch it later from the menu).
 - **Screen stays on** while reading, even without HTTPS.
@@ -75,7 +76,21 @@ The password is stored only as a hash (scrypt) in `/data/auth.json`. Sessions la
 
 ### Menu and language
 
-The menu in the top-right corner of the library has **Teleprompter settings** (the general settings and shortcuts, without opening a script), **Language** (Português / English), **Change password** and **Sign out**. The language is also chosen on the sign-in screen and is remembered on each device; if you never choose one, Glimpse follows the browser language.
+The menu in the top-right corner of the library has **Teleprompter settings** (the general settings and shortcuts, without opening a script), **Remote control**, **Language** (Português / English), **Change password** and **Sign out**. The language is also chosen on the sign-in screen and is remembered on each device; if you never choose one, Glimpse follows the browser language.
+
+### Remote control
+
+<img src="site/assets/screens/en-remote.png" alt="Remote control page" width="420" align="right">
+
+Control a reader that is open on another device, such as the phone mounted on the camera, from a laptop or desktop:
+
+1. Open the script in the reader on the phone (signed in as administrator).
+2. On the computer, open the menu → **Remote control** and pick the reader from the list (if only one is open, it is selected automatically).
+3. Use the buttons: **play / pause**, **speed − / +**, **text size − / +** and **jump back / forward**. Your configured keyboard shortcuts work on this page too, so a keyboard or a Bluetooth remote connected to the computer can drive the phone.
+
+The page shows the reader's state (playing or paused, speed, size and how much was read). It works over plain HTTP on your local network; if the connection drops, the phone keeps scrolling on its own and the control reconnects automatically.
+
+<br clear="right">
 
 ### General settings vs. a script's custom settings
 
@@ -156,6 +171,7 @@ public/         interface (plain HTML/CSS/JS, no build step)
   js/keys.js    shortcuts (keyboard, Bluetooth, gamepad)
   js/settings.js reading settings
   js/i18n.js    languages (js/locales/pt.js and en.js)
+  js/remote.js  remote control page (server side: src/remote.js)
 site/           project website (GitHub Pages)
 scripts/        e2e tests and screenshots via Docker
 test/           unit and API tests (node:test)
