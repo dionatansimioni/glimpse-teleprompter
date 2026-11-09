@@ -113,6 +113,7 @@ async function main() {
       await d.waitForTimeout(150);
       await shot(d, 'menu');
 
+      await d.goto('about:blank'); // recarrega a página (só trocar o # manteria o menu aberto)
       await d.goto(`${BASE}/#/edit/${ids[0]}`);
       await d.waitForSelector('#editor-view:not([hidden])');
       await shot(d, 'editor');

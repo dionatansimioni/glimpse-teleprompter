@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glimpse Teleprompter · Open source web teleprompter</title>
+  <meta name="description" content="Open source, self-hosted web teleprompter. Upload Markdown scripts from your computer and read them on your phone or tablet. Runs on Docker.">
+  <meta property="og:title" content="Glimpse Teleprompter">
+  <meta property="og:description" content="Open source, self-hosted web teleprompter. Upload Markdown scripts and read them on any screen.">
+  <meta property="og:image" content="assets/screens/en-reader-desktop.png">
+  <meta name="theme-color" content="#0f0f0e">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="logo" href="#top"><img src="assets/icon.svg" alt="" width="28" height="28"> Glimpse</a>
+      <nav class="nav" aria-label="Main">
+        <a href="#features" data-i18n="nav.features">Features</a>
+        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#install" data-i18n="nav.install">Install</a>
+        <a href="https://github.com/dionatansimioni/glimpse-teleprompter">GitHub</a>
+      </nav>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang="pt" aria-pressed="false">PT</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="wrap hero-grid">
+        <div class="hero-text">
+          <p class="eyebrow" data-i18n="hero.eyebrow">Open source · Self-hosted · Free</p>
+          <h1 data-i18n="hero.title">Your scripts, on any screen.</h1>
+          <p class="lead" data-i18n="hero.lead">Glimpse is a web teleprompter you run on your own server. Write or upload scripts in Markdown from your computer, then read them on your phone or tablet, with mirroring, Bluetooth remotes and settings that follow you everywhere.</p>
+          <div class="cta">
+            <a class="btn primary" href="#install" data-i18n="hero.start">Get started</a>
+            <a class="btn" href="https://github.com/dionatansimioni/glimpse-teleprompter" data-i18n="hero.github">View on GitHub</a>
+          </div>
+          <p class="hero-note" data-i18n="hero.note">Runs with Docker on amd64 and arm64, including Raspberry Pi.</p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <img class="shot desktop" data-shot="reader-desktop" src="assets/screens/en-reader-desktop.png" alt="" width="1280" height="800">
+          <img class="shot phone" data-shot="reader-phone" src="assets/screens/en-reader-phone.png" alt="" width="412" height="915">
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="wrap">
+        <h2 data-i18n="features.title">Everything a teleprompter needs</h2>
+        <p class="section-lead" data-i18n="features.lead">Simple to use, minimal to look at, and built for recording videos.</p>
+        <div class="features">
+          <article class="feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+            <h3 data-i18n="f.markdown.t">Markdown scripts</h3>
+            <p data-i18n="f.markdown.d">Write in the built-in editor or import .md files. Headings become sections, ==highlights== stand out and &gt; notes appear as stage directions.</p>
+          </article>
+          <article class="feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+            <h3 data-i18n="f.settings.t">Universal settings</h3>
+            <p data-i18n="f.settings.d">Set text size, speed and colors once: every script and device follows them. Need something different for one video? Give that script its own settings.</p>
+          </article>
+          <article class="feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M8 7 4 12l4 5M16 7l4 5-4 5"/></svg>
+            <h3 data-i18n="f.mirror.t">Mirroring and direction</h3>
+            <p data-i18n="f.mirror.d">Horizontal and vertical mirroring for beam-splitter glass, reversible scrolling, reading guide, countdown and time left.</p>
+          </article>
+          <article class="feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="3"/><path d="M12 6v2M10 12h4M12 10v4"/></svg>
+            <h3 data-i18n="f.remote.t">Bluetooth remotes</h3>
+            <p data-i18n="f.remote.d">Map any key, page turner, media button or gamepad button to any action. Shortcuts are saved on the server and work on every device.</p>
+          </article>
+          <article class="feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            <h3 data-i18n="f.screen.t">Full screen, screen stays on</h3>
+            <p data-i18n="f.screen.d">Read in full screen and the screen never turns off mid-take, even over plain HTTP on your local network.</p>
+          </article>
+          <article class="feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h18v6H3zM6 9h4v4H6zM10 9h4v4h-4zM10 5h4v4h-4zM14 9h4v4h-4z"/></svg>
+            <h3 data-i18n="f.docker.t">Self-hosted with Docker</h3>
+            <p data-i18n="f.docker.d">One container, one volume. Your scripts stay on your server; no account, no cloud, no tracking.</p>
+          </article>
+          <article class="feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>
+            <h3 data-i18n="f.lang.t">English and Portuguese</h3>
+            <p data-i18n="f.lang.d">Choose the language on the sign-in screen and switch any time from the menu.</p>
+          </article>
+          <article class="feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9 4 12l4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>
+            <h3 data-i18n="f.oss.t">Open source</h3>
+            <p data-i18n="f.oss.d">MIT licensed, tested on every change, with images published automatically to the GitHub Container Registry.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="how">
+      <div class="wrap">
+        <h2 data-i18n="how.title">How it works</h2>
+        <ol class="steps">
+          <li class="step">
+            <img class="shot" data-shot="editor" src="assets/screens/en-editor.png" alt="" width="1280" height="800" loading="lazy">
+            <div>
+              <span class="step-n">1</span>
+              <h3 data-i18n="how.1.t">Write on your computer</h3>
+              <p data-i18n="how.1.d">Sign in from any browser, create a script or drag your .md files into the library. Each script gets a title, and you can preview the Markdown before saving.</p>
+            </div>
+          </li>
+          <li class="step">
+            <img class="shot narrow" data-shot="reader-mirrored" src="assets/screens/en-reader-mirrored.png" alt="" width="412" height="915" loading="lazy">
+            <div>
+              <span class="step-n">2</span>
+              <h3 data-i18n="how.2.t">Read on your phone or tablet</h3>
+              <p data-i18n="how.2.d">Open the same address on the device in front of the camera. Tap to play, drag to adjust, and use a Bluetooth remote to control the flow without touching the screen.</p>
+            </div>
+          </li>
+          <li class="step">
+            <img class="shot narrow" data-shot="panel-phone" src="assets/screens/en-panel-phone.png" alt="" width="412" height="915" loading="lazy">
+            <div>
+              <span class="step-n">3</span>
+              <h3 data-i18n="how.3.t">Tune it once</h3>
+              <p data-i18n="how.3.d">Adjust speed, size, colors, mirroring and shortcuts. Changes apply to all your scripts and devices, or only to the script you are reading.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" id="gallery">
+      <div class="wrap">
+        <h2 data-i18n="gallery.title">A closer look</h2>
+        <div class="gallery">
+          <figure>
+            <img class="shot" data-shot="library" src="assets/screens/en-library.png" alt="" width="1280" height="800" loading="lazy">
+            <figcaption data-i18n="gallery.library">Script library with search, import and download.</figcaption>
+          </figure>
+          <figure>
+            <img class="shot" data-shot="settings" src="assets/screens/en-settings.png" alt="" width="1280" height="800" loading="lazy">
+            <figcaption data-i18n="gallery.settings">Teleprompter settings and shortcuts, available from the top-right menu.</figcaption>
+          </figure>
+          <figure>
+            <img class="shot" data-shot="menu" src="assets/screens/en-menu.png" alt="" width="1280" height="800" loading="lazy">
+            <figcaption data-i18n="gallery.menu">Menu with settings, language, password and sign out.</figcaption>
+          </figure>
+          <figure>
+            <img class="shot" data-shot="login" src="assets/screens/en-login.png" alt="" width="1280" height="800" loading="lazy">
+            <figcaption data-i18n="gallery.login">Language picker on the sign-in screen.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="install">
+      <div class="wrap narrow-wrap">
+        <h2 data-i18n="install.title">Install in a minute</h2>
+        <p class="section-lead" data-i18n="install.lead">You need Docker. Download the compose file and start the container:</p>
+        <div class="code">
+          <button type="button" class="copy" data-copy="code-compose" data-i18n="install.copy">Copy</button>
+          <pre id="code-compose"><code>curl -O https://raw.githubusercontent.com/dionatansimioni/glimpse-teleprompter/main/docker-compose.yml
+docker compose up -d</code></pre>
+        </div>
+        <p data-i18n="install.open">Then open http://YOUR-SERVER:3000 and create the administrator password on the first access.</p>
+        <p class="muted" data-i18n="install.run">Prefer a single command?</p>
+        <div class="code">
+          <button type="button" class="copy" data-copy="code-run" data-i18n="install.copy">Copy</button>
+          <pre id="code-run"><code>docker run -d --name glimpse -p 3000:3000 \
+  -v glimpse-data:/data \
+  ghcr.io/dionatansimioni/glimpse-teleprompter:latest</code></pre>
+        </div>
+        <p class="muted" data-i18n="install.https">Tip: behind a reverse proxy with HTTPS you also get the browser's native Wake Lock and unrestricted full screen.</p>
+      </div>
+    </section>
+
+    <section class="section" id="shortcuts">
+      <div class="wrap narrow-wrap">
+        <h2 data-i18n="keys.title">Default shortcuts</h2>
+        <p class="section-lead" data-i18n="keys.lead">All of them can be remapped, including Bluetooth remote and gamepad buttons.</p>
+        <table class="keys">
+          <tbody>
+            <tr><th data-i18n="keys.play">Play / pause</th><td><kbd>Space</kbd> <kbd>Enter</kbd> <kbd>K</kbd> <kbd>⏯</kbd></td></tr>
+            <tr><th data-i18n="keys.speed">Speed − / +</th><td><kbd>←</kbd> <kbd>→</kbd></td></tr>
+            <tr><th data-i18n="keys.jump">Jump back / forward</th><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Page Up</kbd> <kbd>Page Down</kbd></td></tr>
+            <tr><th data-i18n="keys.section">Previous / next section</th><td><kbd>,</kbd> <kbd>.</kbd></td></tr>
+            <tr><th data-i18n="keys.size">Smaller / larger text</th><td><kbd>[</kbd> <kbd>]</kbd></td></tr>
+            <tr><th data-i18n="keys.mirror">Mirror horizontally / vertically</th><td><kbd>M</kbd> <kbd>V</kbd></td></tr>
+            <tr><th data-i18n="keys.full">Full screen</th><td><kbd>F</kbd></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-row">
+      <p><img src="assets/icon.svg" alt="" width="20" height="20"> Glimpse Teleprompter · <span data-i18n="footer.license">MIT license</span></p>
+      <p>
+        <a href="https://github.com/dionatansimioni/glimpse-teleprompter">GitHub</a> ·
+        <a href="https://github.com/dionatansimioni/glimpse-teleprompter/pkgs/container/glimpse-teleprompter" data-i18n="footer.image">Docker image</a> ·
+        <a href="https://github.com/dionatansimioni/glimpse-teleprompter/issues" data-i18n="footer.issues">Report an issue</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
