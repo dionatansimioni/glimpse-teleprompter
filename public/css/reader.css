@@ -233,10 +233,20 @@ body.reader.playing .hud-btn .i-pause { display: block; }
 .time-left { flex: 1; text-align: right; font-size: 14px; opacity: .8; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 600px) {
-  .hud { flex-wrap: wrap; justify-content: space-between; }
-  .hud-title { order: -1; flex-basis: calc(100% - 60px); }
-  .hud-center { order: 2; flex-basis: 100%; justify-content: center; }
-  .time-left { flex: 0; }
+  .hud {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+    grid-template-areas:
+      "back title time fs settings"
+      "ctrl ctrl ctrl ctrl ctrl";
+    row-gap: 10px;
+  }
+  .hud-back { grid-area: back; }
+  .hud-title { grid-area: title; }
+  .time-left { grid-area: time; }
+  .hud-fs { grid-area: fs; }
+  .hud-settings { grid-area: settings; }
+  .hud-center { grid-area: ctrl; justify-content: center; }
 }
 
 /* ---------- Painel de configurações ---------- */

@@ -165,6 +165,18 @@ test.describe('Teleprompter', () => {
     await expect(page.locator('body')).not.toHaveClass(/playing/);
   });
 
+  test('barra de controles organizada no celular', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'layout do celular');
+    const box = (sel) => page.locator(sel).boundingBox();
+    const [back, settingsBtn, fs, play] = await Promise.all(['.hud-back', '.hud-settings', '.hud-fs', '#btn-play'].map(box));
+    expect(back.x).toBeLessThan(fs.x);
+    expect(fs.x).toBeLessThan(settingsBtn.x);
+    expect(Math.abs(back.y - settingsBtn.y)).toBeLessThan(4); // mesma linha
+    expect(play.y).toBeGreaterThan(back.y + back.height - 1); // controles abaixo
+    const viewport = page.viewportSize();
+    expect(Math.abs(play.x + play.width / 2 - viewport.width / 2)).toBeLessThan(viewport.width * 0.2);
+  });
+
   test('botão de tela cheia entra e sai da tela cheia', async ({ page }) => {
     await page.click('#btn-fs');
     await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true);

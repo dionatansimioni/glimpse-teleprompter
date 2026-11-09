@@ -28,7 +28,7 @@
   <div id="speed-flash" class="speed-flash" aria-live="polite"></div>
 
   <nav id="hud" class="hud" aria-label="Controles">
-    <a class="hud-btn" href="/" title="Voltar à biblioteca" aria-label="Voltar à biblioteca">
+    <a class="hud-btn hud-back" href="/" title="Voltar à biblioteca" aria-label="Voltar à biblioteca">
       <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
     </a>
     <span id="script-title" class="hud-title"></span>
@@ -50,10 +50,10 @@
       </div>
     </div>
     <span id="time-left" class="time-left" title="Tempo restante estimado"></span>
-    <button class="hud-btn" data-action="fullscreen" id="btn-fs" title="Tela cheia" aria-label="Tela cheia">
+    <button class="hud-btn hud-fs" data-action="fullscreen" id="btn-fs" title="Tela cheia" aria-label="Tela cheia">
       <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
     </button>
-    <button class="hud-btn" data-action="settings" title="Configurações" aria-label="Configurações">
+    <button class="hud-btn hud-settings" data-action="settings" title="Configurações" aria-label="Configurações">
       <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
     </button>
   </nav>
