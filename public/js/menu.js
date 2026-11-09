@@ -12,6 +12,7 @@ const TEMPLATE = `
   </button>
   <div class="menu-list" id="menu-list" role="menu" hidden>
     <a role="menuitem" href="/settings" id="menu-settings" data-admin data-i18n="menu.settings"></a>
+    <a role="menuitem" href="/remote" id="menu-remote" data-admin data-i18n="menu.remote"></a>
     <div class="menu-sep" role="separator"></div>
     <span class="menu-label" data-i18n="menu.language"></span>
     <button role="menuitemradio" type="button" data-lang-option="pt" lang="pt-BR">Português</button>

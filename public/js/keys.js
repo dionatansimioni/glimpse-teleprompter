@@ -27,6 +27,11 @@ export const ACTIONS = [
 
 export const ACTION_IDS = ACTIONS.map((a) => a.id);
 
+// Ações que o controle remoto pode enviar a um leitor.
+export const REMOTE_ACTIONS = Object.freeze([
+  'togglePlay', 'speedDown', 'speedUp', 'fontDown', 'fontUp', 'jumpBack', 'jumpForward',
+]);
+
 export function defaultBindings() {
   return Object.fromEntries(ACTIONS.map((a) => [a.id, [...a.keys]]));
 }

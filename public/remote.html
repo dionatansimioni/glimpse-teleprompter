@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR" data-i18n-pending>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="remote.pageTitle">Controle remoto · Glimpse</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#121211">
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/remote.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><img src="/icon.svg" alt=""> Glimpse</a>
+    <div class="spacer"></div>
+    <div id="app-menu"></div>
+  </header>
+
+  <main class="container remote-page">
+    <div class="toolbar">
+      <a class="button ghost" href="/" data-i18n="common.back">← Voltar</a>
+      <div class="spacer"></div>
+      <span class="status" id="connection" aria-live="polite"></span>
+    </div>
+    <h1 data-i18n="remote.heading">Controle remoto</h1>
+
+    <!-- Escolha do leitor -->
+    <section id="list-view">
+      <p class="hint" data-i18n="remote.intro">Escolha um leitor aberto para controlar.</p>
+      <ul id="readers" class="reader-list"></ul>
+      <div id="empty" class="empty" data-i18n="remote.empty">Nenhum leitor aberto.</div>
+    </section>
+
+    <!-- Controles -->
+    <section id="control-view" hidden>
+      <div class="remote-target">
+        <div>
+          <div class="remote-title" id="target-title"></div>
+          <div class="remote-meta" id="target-meta"></div>
+        </div>
+        <button type="button" id="change-reader" data-i18n="remote.change">Trocar leitor</button>
+      </div>
+      <div class="remote-progress" aria-hidden="true"><div id="target-progress"></div></div>
+
+      <div class="remote-controls">
+        <button type="button" class="remote-btn" data-remote="jumpBack" data-i18n-attr="aria-label:reader.jumpBack;title:reader.jumpBack">
+          <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          <span data-i18n="reader.jumpBack">Voltar trecho</span>
+        </button>
+        <button type="button" class="remote-btn play" id="remote-play" data-remote="togglePlay">
+          <svg class="i-play" viewBox="0 0 24 24"><path class="fill" d="M8 5v14l11-7z"/></svg>
+          <svg class="i-pause" viewBox="0 0 24 24"><path class="fill" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+          <span id="remote-play-label"></span>
+        </button>
+        <button type="button" class="remote-btn" data-remote="jumpForward" data-i18n-attr="aria-label:reader.jumpForward;title:reader.jumpForward">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          <span data-i18n="reader.jumpForward">Avançar trecho</span>
+        </button>
+      </div>
+
+      <div class="remote-steppers">
+        <div class="stepper">
+          <span class="stepper-label" data-i18n="setting.speed">Velocidade</span>
+          <button type="button" data-remote="speedDown" data-i18n-attr="aria-label:reader.speedDown;title:reader.speedDown">−</button>
+          <output id="target-speed">–</output>
+          <button type="button" data-remote="speedUp" data-i18n-attr="aria-label:reader.speedUp;title:reader.speedUp">+</button>
+        </div>
+        <div class="stepper">
+          <span class="stepper-label" data-i18n="setting.fontSize">Tamanho</span>
+          <button type="button" data-remote="fontDown" data-i18n-attr="aria-label:action.fontDown;title:action.fontDown">−</button>
+          <output id="target-font">–</output>
+          <button type="button" data-remote="fontUp" data-i18n-attr="aria-label:action.fontUp;title:action.fontUp">+</button>
+        </div>
+      </div>
+      <p class="hint" data-i18n="remote.keyboardHint">Os atalhos de teclado configurados também funcionam nesta página.</p>
+    </section>
+  </main>
+</body>
+</html>

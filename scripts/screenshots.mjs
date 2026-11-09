@@ -135,6 +135,12 @@ async function main() {
       await p.waitForSelector('#text h1');
       await p.waitForTimeout(200);
       await shot(p, 'reader-phone');
+
+      // Controle remoto no computador, com o celular acima aberto no leitor.
+      await d.goto(`${BASE}/remote`);
+      await d.waitForSelector('#control-view:not([hidden])');
+      await d.waitForTimeout(200);
+      await shot(d, 'remote');
       await p.click('[data-action=settings]');
       await p.waitForTimeout(250);
       await shot(p, 'panel-phone');

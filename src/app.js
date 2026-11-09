@@ -5,6 +5,7 @@ import { AuthError, createAuth } from './auth.js';
 import { languageFromHeaders, translate } from '../public/js/i18n.js';
 import { createStore } from './store.js';
 import { createSettingsStore } from './settings-store.js';
+import { createRemoteHub, deviceLabel, REMOTE_ACTIONS } from './remote.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -75,6 +76,8 @@ export async function createApp({
   const app = express();
   app.disable('x-powered-by');
   app.locals.configured = auth.isConfigured;
+  const remote = createRemoteHub();
+  app.locals.closeRemote = () => remote.close();
   app.set('trust proxy', trustProxy);
   app.use(securityHeaders);
 
@@ -194,6 +197,45 @@ export async function createApp({
 
   api.delete('/scripts/:id', requireAdmin, async (req, res) => {
     if (!(await store.remove(req.params.id))) throw new HttpError(404, 'server.scriptNotFound');
+    res.status(204).end();
+  });
+
+  // ---------- Controle remoto (ver src/remote.js) ----------
+  const openStream = (res) => {
+    res.status(200).set({
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no', // não bufferizar no Nginx
+    });
+    res.flushHeaders();
+    res.write(': ok\n\n');
+  };
+
+  api.get('/remote/reader', requireAdmin, async (req, res) => {
+    const doc = await store.get(String(req.query.script ?? ''));
+    if (!doc) throw new HttpError(404, 'server.scriptNotFound');
+    openStream(res);
+    const id = remote.addReader({ scriptId: doc.id, title: doc.title, device: deviceLabel(req.get('user-agent')), res });
+    if (!id) return res.end();
+    req.on('close', () => remote.removeReader(id));
+  });
+
+  api.post('/remote/readers/:id/state', requireAdmin, (req, res) => {
+    if (!remote.updateState(req.params.id, req.body?.state)) throw new HttpError(404, 'server.readerNotFound');
+    res.status(204).end();
+  });
+
+  api.get('/remote/controller', requireAdmin, (req, res) => {
+    openStream(res);
+    if (!remote.addController(res)) return res.end();
+    req.on('close', () => remote.removeController(res));
+  });
+
+  api.post('/remote/readers/:id/commands', requireAdmin, (req, res) => {
+    const action = req.body?.action;
+    if (!REMOTE_ACTIONS.includes(action)) throw new HttpError(400, 'server.invalidCommand');
+    if (!remote.command(req.params.id, action)) throw new HttpError(404, 'server.readerNotFound');
     res.status(204).end();
   });
 

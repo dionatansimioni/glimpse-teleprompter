@@ -343,7 +343,79 @@ main.container {
 #logout { color: var(--danger); }
 
 /* ---------- Página de configurações ---------- */
-.settings-page { max-width: 720px; }
+main.settings-page { max-width: 760px; }
 .settings-page h1 { margin: 0 0 4px; font-size: 1.5rem; }
 .settings-page .settings-sections { margin-top: 12px; }
 .settings-page #settings-form > section { border-bottom: 1px solid var(--border); }
+
+/* ---------- Controle remoto ---------- */
+main.remote-page { max-width: 760px; }
+.remote-page h1 { margin: 0 0 8px; font-size: 1.5rem; }
+.reader-list { list-style: none; margin: 16px 0; padding: 0; display: grid; gap: 10px; }
+.reader-item {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 16px;
+  text-align: left;
+  white-space: normal;
+}
+.remote-title { font-weight: 600; font-size: 1.05rem; }
+.remote-meta { color: var(--muted); font-size: .9rem; }
+.remote-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.remote-progress { height: 4px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.remote-progress div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.remote-controls { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 12px; margin: 24px 0; }
+.remote-btn {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 120px;
+  padding: 12px;
+  font-size: .95rem;
+  white-space: normal;
+}
+.remote-btn svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.remote-btn svg .fill { fill: currentColor; stroke: none; }
+.remote-btn.play { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; font-size: 1.1rem; }
+.remote-btn.play svg { width: 44px; height: 44px; }
+.remote-btn .i-pause, .remote-btn.is-playing .i-play { display: none; }
+.remote-btn.is-playing .i-pause { display: block; }
+.remote-steppers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stepper {
+  display: grid;
+  grid-template-columns: 1fr auto 4.5em auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.stepper button { width: 48px; min-height: 48px; padding: 0; font-size: 1.4rem; }
+.stepper output { text-align: center; font-size: 1.2rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stepper-label { color: var(--muted); font-size: .9rem; }
+@media (max-width: 560px) {
+  .remote-steppers { grid-template-columns: 1fr; }
+  .remote-btn { min-height: 96px; }
+}

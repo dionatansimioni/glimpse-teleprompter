@@ -12,6 +12,7 @@ import { createScreenWake, wakeStatusText } from './wake.js';
 import { t, translateDom } from './i18n.js';
 import { renderSettingsForm } from './settings-form.js';
 import { createBindingsEditor } from './bindings-editor.js';
+import { connectRemoteReader } from './remote-reader.js';
 
 translateDom();
 
@@ -39,6 +40,7 @@ let settings = { ...DEFAULT_SETTINGS }; // efetiva = geral + ajustes do roteiro
 let bindings = defaultBindings();
 let scope = 'global'; // onde as alterações são gravadas: 'global' | 'script'
 let canSave = false;  // só o administrador grava no servidor
+let remote = null;    // conexão com o controle remoto (ver startRemote)
 
 // ---------- Estado da rolagem ----------
 let pos = 0;          // deslocamento em px a partir do início do texto
@@ -78,6 +80,7 @@ function render() {
   const remaining = dirSign() > 0 ? maxPos - pos : pos;
   const timeText = maxPos ? `−${formatDuration(remaining / pps())}` : '';
   if (timeText !== lastTimeText) timeLeftEl.textContent = lastTimeText = timeText;
+  remote?.report();
 }
 
 function tick(t) {
@@ -161,6 +164,7 @@ function startPlaying() {
   $('btn-play').setAttribute('aria-label', t('reader.pause'));
   kick();
   scheduleHudHide();
+  remote?.report();
 }
 
 function pause() {
@@ -169,6 +173,7 @@ function pause() {
   body.classList.remove('playing');
   $('btn-play').setAttribute('aria-label', t('reader.play'));
   showHud();
+  remote?.report();
 }
 
 function togglePlay() {
@@ -684,6 +689,20 @@ window.addEventListener('glimpse:language', () => {
   addEndMark();
 });
 
+// ---------- Controle remoto (outro aparelho controla este leitor) ----------
+function startRemote() {
+  remote = connectRemoteReader({
+    scriptId,
+    onCommand: run,
+    getState: () => ({
+      playing: playing || Boolean(countdownTimer),
+      speed: settings.speed,
+      fontSize: settings.fontSize,
+      progress: maxPos ? Math.round((pos / maxPos) * 100) / 100 : 0,
+    }),
+  });
+}
+
 // ---------- Início ----------
 // Versões antigas guardavam as configurações só no navegador: leva para o servidor.
 async function migrateLegacySettings(serverHasSettings) {
@@ -733,6 +752,7 @@ async function init() {
     $('script-title').textContent = doc.title;
     text.innerHTML = renderMarkdown(doc.content);
     addEndMark();
+    if (canSave) startRemote(); // só o administrador pode ser controlado
   } catch (err) {
     if (err.status === 401) return goToLogin();
     text.textContent = err.message;

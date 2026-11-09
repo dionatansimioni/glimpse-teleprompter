@@ -47,6 +47,21 @@ export default {
   'menu.logout': 'Sair',
   'menu.login': 'Entrar',
 
+  // Controle remoto
+  'menu.remote': 'Controle remoto',
+  'remote.pageTitle': 'Controle remoto · Glimpse',
+  'remote.heading': 'Controle remoto',
+  'remote.intro': 'Escolha um leitor aberto para controlar daqui: reproduzir e pausar, velocidade, tamanho do texto e avançar ou voltar.',
+  'remote.empty': 'Nenhum leitor aberto. Abra um roteiro em outro aparelho (logado como administrador) e ele aparece aqui.',
+  'remote.change': 'Trocar leitor',
+  'remote.playing': 'Reproduzindo',
+  'remote.paused': 'Pausado',
+  'remote.progress': '{n}% lido',
+  'remote.unknownDevice': 'Navegador',
+  'remote.disconnected': 'O leitor foi fechado ou perdeu a conexão.',
+  'remote.offline': 'Sem conexão com o servidor. Tentando reconectar…',
+  'remote.keyboardHint': 'Os atalhos de teclado configurados também funcionam nesta página.',
+
   // Biblioteca
   'library.pageTitle': 'Glimpse Teleprompter',
   'library.search': 'Buscar roteiros…',
@@ -248,4 +263,6 @@ export default {
   'server.alreadyConfigured': 'O Glimpse já foi configurado.',
   'server.currentPasswordWrong': 'A senha atual está incorreta.',
   'server.passwordSame': 'A nova senha precisa ser diferente da atual.',
+  'server.invalidCommand': 'Comando inválido.',
+  'server.readerNotFound': 'Esse leitor não está mais aberto.',
 };

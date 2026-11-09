@@ -35,6 +35,11 @@ const server = app.listen(port, () => {
   }
 });
 
+// Conexões do controle remoto ficam abertas: encerra-as para o servidor parar.
 for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => server.close(() => process.exit(0)));
+  process.on(signal, () => {
+    app.locals.closeRemote();
+    server.close(() => process.exit(0));
+    server.closeAllConnections?.();
+  });
 }

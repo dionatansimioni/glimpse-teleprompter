@@ -47,6 +47,21 @@ export default {
   'menu.logout': 'Sign out',
   'menu.login': 'Sign in',
 
+  // Controle remoto
+  'menu.remote': 'Remote control',
+  'remote.pageTitle': 'Remote control · Glimpse',
+  'remote.heading': 'Remote control',
+  'remote.intro': 'Pick an open reader to control from here: play and pause, speed, text size and jumping back or forward.',
+  'remote.empty': 'No open readers. Open a script on another device (signed in as administrator) and it shows up here.',
+  'remote.change': 'Change reader',
+  'remote.playing': 'Playing',
+  'remote.paused': 'Paused',
+  'remote.progress': '{n}% read',
+  'remote.unknownDevice': 'Browser',
+  'remote.disconnected': 'The reader was closed or lost its connection.',
+  'remote.offline': 'No connection to the server. Reconnecting…',
+  'remote.keyboardHint': 'Your configured keyboard shortcuts also work on this page.',
+
   // Library
   'library.pageTitle': 'Glimpse Teleprompter',
   'library.search': 'Search scripts…',
@@ -248,4 +263,6 @@ export default {
   'server.alreadyConfigured': 'Glimpse has already been set up.',
   'server.currentPasswordWrong': 'The current password is wrong.',
   'server.passwordSame': 'The new password must be different from the current one.',
+  'server.invalidCommand': 'Invalid command.',
+  'server.readerNotFound': 'That reader is no longer open.',
 };
