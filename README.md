@@ -68,6 +68,26 @@ All of them are optional.
 
 The password is stored only as a hash (scrypt) in `/data/auth.json`. Sessions last 30 days.
 
+## Installing on ZimaOS / CasaOS
+
+Glimpse ships a ready-made compose file for [ZimaOS](https://www.zimaspace.com/zimaos) and CasaOS, with name, icon and description for the dashboard: [`docker-compose.zimaos.yml`](docker-compose.zimaos.yml). Data goes to `/DATA/AppData/glimpse`, the standard app folder.
+
+1. **Create the data folder.** The container runs as an unprivileged user (UID 1000), so the folder must belong to it. In the ZimaOS terminal (or over SSH):
+
+   ```bash
+   sudo mkdir -p /DATA/AppData/glimpse
+   sudo chown -R 1000:1000 /DATA/AppData/glimpse
+   ```
+
+2. **Install the app.** In the dashboard, open the **App Store**, click **+** → custom install, use the **import** button and paste the contents of [`docker-compose.zimaos.yml`](https://raw.githubusercontent.com/dionatansimioni/glimpse-teleprompter/main/docker-compose.zimaos.yml). Confirm the installation.
+
+3. **Open Glimpse** from its dashboard icon (or `http://ZIMA-IP:3000`) and create the administrator password.
+
+- **Port 3000 already in use:** change `published: "3000"` (and `port_map`) to another port, such as `"3080"`.
+- **The app keeps restarting:** check its logs. If they say *sem permissão para gravar em /data* (no permission to write to /data), step 1 is missing: run the `chown` and restart the app.
+- **Forgot the password:** delete `/DATA/AppData/glimpse/auth.json` and restart the app. Scripts are kept.
+- **Backup:** copy the `/DATA/AppData/glimpse` folder.
+
 ## How to use
 
 1. On your computer, open `http://server:3000`, sign in (or create the password on the first access) and click **New script** or **Import .md** (or drag files onto the page).

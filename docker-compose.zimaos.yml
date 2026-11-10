@@ -1,0 +1,63 @@
+# Glimpse Teleprompter para ZimaOS e CasaOS.
+# Importe este arquivo em App Store → "+" → instalação personalizada → importar.
+# Antes, crie a pasta de dados com o dono certo (o container roda como UID 1000):
+#   sudo mkdir -p /DATA/AppData/glimpse && sudo chown -R 1000:1000 /DATA/AppData/glimpse
+name: glimpse
+services:
+  glimpse:
+    image: ghcr.io/dionatansimioni/glimpse-teleprompter:latest
+    container_name: glimpse
+    restart: unless-stopped
+    ports:
+      - target: 3000
+        published: "3000"
+        protocol: tcp
+    environment:
+      PUBLIC_READ: "false"
+      COOKIE_SECURE: "false"
+    volumes:
+      - type: bind
+        source: /DATA/AppData/glimpse
+        target: /data
+    x-casaos:
+      envs:
+        - container: PUBLIC_READ
+          description:
+            en_us: "true lets anyone list and read scripts without signing in"
+            pt_br: "true permite listar e ler roteiros sem login"
+        - container: COOKIE_SECURE
+          description:
+            en_us: "Use true when Glimpse is accessed over HTTPS"
+            pt_br: "Use true quando o acesso for por HTTPS"
+      ports:
+        - container: "3000"
+          description:
+            en_us: Web interface
+            pt_br: Interface web
+      volumes:
+        - container: /data
+          description:
+            en_us: Scripts, settings and password hash
+            pt_br: Roteiros, configurações e hash da senha
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: glimpse
+  author: Dionatan Simioni
+  developer: Dionatan Simioni
+  category: Utilities
+  icon: https://dionatansimioni.github.io/glimpse-teleprompter/assets/icon.svg
+  index: /
+  port_map: "3000"
+  scheme: http
+  title:
+    en_us: Glimpse Teleprompter
+    pt_br: Glimpse Teleprompter
+  tagline:
+    en_us: Self-hosted web teleprompter
+    pt_br: Teleprompter web auto-hospedado
+  description:
+    en_us: Write or upload Markdown scripts on your computer and read them on your phone or tablet, with mirroring, Bluetooth remotes and a remote control from another computer.
+    pt_br: Escreva ou suba roteiros em Markdown pelo computador e leia no celular ou tablet, com espelhamento, controles Bluetooth e controle remoto por outro computador.

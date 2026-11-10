@@ -68,6 +68,26 @@ Todas são opcionais.
 
 A senha é guardada apenas como hash (scrypt) em `/data/auth.json`. As sessões duram 30 dias.
 
+## Instalando no ZimaOS / CasaOS
+
+O Glimpse tem um compose pronto para o [ZimaOS](https://www.zimaspace.com/zimaos) e o CasaOS, com nome, ícone e descrição para o painel: [`docker-compose.zimaos.yml`](docker-compose.zimaos.yml). Os dados ficam em `/DATA/AppData/glimpse`, a pasta padrão dos apps.
+
+1. **Crie a pasta de dados.** O container roda como um usuário sem privilégios (UID 1000), então a pasta precisa ser dele. No terminal do ZimaOS (ou por SSH):
+
+   ```bash
+   sudo mkdir -p /DATA/AppData/glimpse
+   sudo chown -R 1000:1000 /DATA/AppData/glimpse
+   ```
+
+2. **Instale o app.** No painel, abra a **App Store**, clique em **+** → instalação personalizada, use o botão de **importar** e cole o conteúdo de [`docker-compose.zimaos.yml`](https://raw.githubusercontent.com/dionatansimioni/glimpse-teleprompter/main/docker-compose.zimaos.yml). Confirme a instalação.
+
+3. **Abra o Glimpse** pelo ícone no painel (ou `http://IP-DO-ZIMA:3000`) e crie a senha de administrador.
+
+- **Porta 3000 ocupada:** troque `published: "3000"` (e `port_map`) por outra porta, como `"3080"`.
+- **O app fica reiniciando:** veja os logs. Se aparecer *sem permissão para gravar em /data*, faltou o passo 1: rode o `chown` e reinicie o app.
+- **Esqueceu a senha:** apague `/DATA/AppData/glimpse/auth.json` e reinicie o app. Os roteiros continuam lá.
+- **Backup:** copie a pasta `/DATA/AppData/glimpse`.
+
 ## Fluxo de uso
 
 1. No PC, entre em `http://servidor:3000`, faça login (ou crie a senha, no primeiro acesso) e clique em **Novo roteiro** ou **Importar .md** (ou arraste arquivos para a página).

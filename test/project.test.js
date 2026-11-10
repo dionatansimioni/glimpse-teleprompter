@@ -44,3 +44,33 @@ test('CI verifica segredos antes de publicar a imagem', async () => {
   assert.match(workflow, /gitleaks/);
   assert.match(workflow, /needs: \[secrets, test, e2e\]/);
 });
+
+test('compose do ZimaOS/CasaOS: imagem, porta, pasta de dados e metadados do painel', async () => {
+  const compose = await read('docker-compose.zimaos.yml');
+  assert.match(compose, /^name: glimpse$/m);
+  assert.match(compose, /image: ghcr\.io\/dionatansimioni\/glimpse-teleprompter:latest/);
+  assert.match(compose, /target: 3000\s+published: "3000"/);
+  assert.match(compose, /source: \/DATA\/AppData\/glimpse\s+target: \/data/);
+  // Metadados que o painel usa para mostrar o app.
+  assert.match(compose, /^x-casaos:\n(?:  .*\n|\s*\n)*?  main: glimpse$/m);
+  assert.match(compose, /architectures:\s+- amd64\s+- arm64/);
+  assert.match(compose, /port_map: "3000"/);
+  for (const key of ['title', 'tagline', 'description']) {
+    assert.match(compose, new RegExp(`  ${key}:\\n    en_us: .+\\n    pt_br: .+`), `${key} em inglês e português`);
+  }
+  // O ícone aponta para o site no GitHub Pages, publicado a partir de site/.
+  const icon = compose.match(/icon: https:\/\/dionatansimioni\.github\.io\/glimpse-teleprompter\/(\S+)/)[1];
+  await fs.access(new URL(`../site/${icon}`, import.meta.url));
+  // O comentário ensina a dar a pasta ao mesmo usuário com que a imagem roda.
+  assert.match(compose, /chown -R 1000:1000 \/DATA\/AppData\/glimpse/);
+  assert.match(await read('Dockerfile'), /^USER node$/m);
+});
+
+test('READMEs explicam a instalação no ZimaOS', async () => {
+  for (const file of ['README.md', 'README.pt-BR.md']) {
+    const text = await read(file);
+    assert.match(text, /## .*ZimaOS/, `${file} sem seção do ZimaOS`);
+    assert.match(text, /docker-compose\.zimaos\.yml/);
+    assert.match(text, /chown -R 1000:1000 \/DATA\/AppData\/glimpse/);
+  }
+});

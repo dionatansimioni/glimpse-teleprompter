@@ -19,13 +19,26 @@ if (env.ADMIN_PASSWORD) {
   console.warn('Aviso: ADMIN_PASSWORD é ignorada. A senha é definida no primeiro acesso pela interface.');
 }
 
-const app = await createApp({
-  dataDir: env.DATA_DIR || './data',
-  sessionSecret: readSecret('SESSION_SECRET'),
-  publicRead: bool(env.PUBLIC_READ),
-  cookieSecure: bool(env.COOKIE_SECURE),
-  trustProxy: parseTrustProxy(env.TRUST_PROXY),
-});
+const dataDir = env.DATA_DIR || './data';
+let app;
+try {
+  app = await createApp({
+    dataDir,
+    sessionSecret: readSecret('SESSION_SECRET'),
+    publicRead: bool(env.PUBLIC_READ),
+    cookieSecure: bool(env.COOKIE_SECURE),
+    trustProxy: parseTrustProxy(env.TRUST_PROXY),
+  });
+} catch (err) {
+  if (err.code !== 'EACCES' && err.code !== 'EPERM') throw err;
+  // Comum com pastas do host (bind mount) criadas como root, ex.: no ZimaOS/CasaOS.
+  const uid = process.getuid?.() ?? '?';
+  const gid = process.getgid?.() ?? '?';
+  console.error(`Erro: sem permissão para gravar em ${dataDir} (${err.path ?? err.message}).`);
+  console.error(`O servidor roda como UID ${uid}. Dê a pasta do host a esse usuário, por exemplo:`);
+  console.error(`  sudo chown -R ${uid}:${gid} /caminho/da/pasta/no/host`);
+  process.exit(1);
+}
 
 const port = Number(env.PORT) || 3000;
 const server = app.listen(port, () => {
