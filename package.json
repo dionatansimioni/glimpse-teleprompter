@@ -1,6 +1,6 @@
 {
   "name": "glimpse-teleprompter",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Teleprompter web auto-hospedado: suba roteiros em Markdown pelo PC e leia no celular ou tablet.",
   "type": "module",
   "main": "src/server.js",
