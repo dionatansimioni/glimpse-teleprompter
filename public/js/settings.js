@@ -10,6 +10,8 @@ export const DEFAULT_SETTINGS = Object.freeze({
   countdown: 3,
   fontSize: 64,
   lineHeight: 1.4,
+  paragraphSpacing: 1,
+  startGap: 30,
   margin: 8,
   align: 'left',
   font: 'sans',
@@ -29,6 +31,8 @@ const NUMBER_RANGES = {
   countdown: [0, 10],
   fontSize: [16, 200],
   lineHeight: [1, 2.4],
+  paragraphSpacing: [0, 3],
+  startGap: [0, 100],
   margin: [0, 35],
   guidePos: [5, 80],
 };
@@ -42,12 +46,12 @@ const CHOICES = {
 
 // Formulário de configurações: seções e campos (os rótulos vêm das traduções
 // section.<id>, setting.<key> e setting.<key>.<opção>).
-const STEPS = { speed: 1, jumpLines: 1, countdown: 1, fontSize: 2, lineHeight: 0.05, margin: 1, guidePos: 1 };
-const UNITS = { countdown: 's', fontSize: 'px', margin: '%', guidePos: '%' };
+const STEPS = { speed: 1, jumpLines: 1, countdown: 1, fontSize: 2, lineHeight: 0.05, paragraphSpacing: 0.1, startGap: 5, margin: 1, guidePos: 1 };
+const UNITS = { countdown: 's', fontSize: 'px', startGap: '%', margin: '%', guidePos: '%' };
 const SECTIONS = {
   scroll: ['speed', 'direction', 'jumpLines', 'countdown'],
-  text: ['fontSize', 'lineHeight', 'margin', 'align', 'font', 'theme', 'uppercase'],
-  screen: ['mirrorX', 'mirrorY', 'showGuide', 'guidePos', 'keepAwake', 'mediaKeys'],
+  text: ['fontSize', 'lineHeight', 'paragraphSpacing', 'margin', 'align', 'font', 'theme', 'uppercase'],
+  screen: ['mirrorX', 'mirrorY', 'showGuide', 'guidePos', 'startGap', 'keepAwake', 'mediaKeys'],
 };
 const WITH_NOTE = ['mediaKeys'];
 

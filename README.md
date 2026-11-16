@@ -10,7 +10,7 @@ Open source, self-hosted web teleprompter. Upload your scripts in Markdown from 
 </p>
 
 - **Staging area**: create, edit, import (`.md`, drag and drop) and download scripts, each with its own title.
-- **Teleprompter**: speed, text size, line spacing, margins, alignment, font, colors, horizontal and vertical mirroring, scroll direction, reading guide, countdown and time left.
+- **Teleprompter**: speed, text size, line and paragraph spacing, lead-in space, margins, alignment, font, colors, horizontal and vertical mirroring, scroll direction, reading guide, countdown and time left.
 - **Full screen** (and installable as an app with "Add to Home Screen").
 - **Universal settings**: text size, speed, mirroring, shortcuts and so on are saved on the server and apply to every script, on any device. When needed, a script can have **custom settings** that override only the items you choose.
 - **Customizable shortcuts**: keyboard, Bluetooth remotes (keys, page turners and media buttons) and gamepads.

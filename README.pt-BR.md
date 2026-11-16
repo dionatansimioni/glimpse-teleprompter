@@ -10,7 +10,7 @@ Teleprompter web, open source e auto-hospedado. Você sobe seus roteiros em Mark
 </p>
 
 - **Área de staging**: crie, edite, importe (`.md`, arrastar e soltar) e baixe roteiros, cada um com título.
-- **Teleprompter**: velocidade, tamanho do texto, espaçamento, margens, alinhamento, fonte, cores, espelhamento horizontal e vertical, direção da rolagem, guia de leitura, contagem regressiva e tempo restante.
+- **Teleprompter**: velocidade, tamanho do texto, espaçamento entre linhas e parágrafos, espaço inicial, margens, alinhamento, fonte, cores, espelhamento horizontal e vertical, direção da rolagem, guia de leitura, contagem regressiva e tempo restante.
 - **Tela cheia** (e instalável como app pela opção "Adicionar à tela inicial").
 - **Configuração universal**: tamanho do texto, velocidade, espelhamento, atalhos etc. ficam salvos no servidor e valem para todos os roteiros, em qualquer aparelho. Quando precisar, um roteiro pode ter **ajustes próprios** que sobrescrevem só os itens escolhidos.
 - **Atalhos customizáveis**: teclado, controles Bluetooth (teclas, page-turners e botões de mídia) e gamepads.

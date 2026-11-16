@@ -62,6 +62,8 @@ function measure() {
   const height = stage.clientHeight;
   lineHeightPx = settings.fontSize * settings.lineHeight;
   guideY = Math.round(height * settings.guidePos / 100);
+  // Espaço antes do texto: ele entra pela parte de baixo até chegar à guia.
+  text.style.paddingTop = `${Math.round(height * settings.startGap / 100)}px`;
   guide.style.top = `${guideY + lineHeightPx / 2}px`;
   guide.style.setProperty('--guide-size', `${Math.min(settings.fontSize, 60)}px`);
   const newMax = Math.max(0, text.offsetHeight - lineHeightPx);
@@ -321,6 +323,7 @@ const form = renderSettingsForm($('settings-form'), {
 function applySettings() {
   text.style.setProperty('--prompt-size', `${settings.fontSize}px`);
   text.style.setProperty('--prompt-lh', String(settings.lineHeight));
+  text.style.setProperty('--prompt-para', `${settings.paragraphSpacing}em`);
   text.style.setProperty('--prompt-margin', `${settings.margin}%`);
   text.classList.toggle('font-serif', settings.font === 'serif');
   text.classList.toggle('font-mono', settings.font === 'mono');

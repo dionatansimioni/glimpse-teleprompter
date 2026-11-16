@@ -105,3 +105,11 @@ test('formatDuration', () => {
   assert.equal(formatDuration(Infinity), '');
   assert.equal(formatDuration(-1), '');
 });
+
+test('espaçamento entre parágrafos e espaço inicial têm padrão e limites', () => {
+  assert.equal(DEFAULT_SETTINGS.paragraphSpacing, 1);
+  assert.equal(DEFAULT_SETTINGS.startGap, 30);
+  const s = sanitizeSettings({ paragraphSpacing: 99, startGap: -5 });
+  assert.equal(s.paragraphSpacing, 3);
+  assert.equal(s.startGap, 0);
+});

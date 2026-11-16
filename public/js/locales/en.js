@@ -173,6 +173,8 @@ export default {
   'setting.countdown': 'Countdown',
   'setting.fontSize': 'Size',
   'setting.lineHeight': 'Line spacing',
+  'setting.paragraphSpacing': 'Paragraph spacing',
+  'setting.startGap': 'Lead-in space before the text',
   'setting.margin': 'Side margins',
   'setting.align': 'Alignment',
   'setting.align.left': 'Left',

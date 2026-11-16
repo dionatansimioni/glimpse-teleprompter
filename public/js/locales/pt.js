@@ -173,6 +173,8 @@ export default {
   'setting.countdown': 'Contagem regressiva',
   'setting.fontSize': 'Tamanho',
   'setting.lineHeight': 'Espaçamento entre linhas',
+  'setting.paragraphSpacing': 'Espaçamento entre parágrafos',
+  'setting.startGap': 'Espaço antes do início do texto',
   'setting.margin': 'Margens laterais',
   'setting.align': 'Alinhamento',
   'setting.align.left': 'Esquerda',
