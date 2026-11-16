@@ -1,5 +1,6 @@
 import { t, translateDom } from './i18n.js';
 import { mountMenu } from './menu.js';
+import { connectRemoteReader } from './remote-reader.js';
 
 translateDom();
 import {
@@ -294,4 +295,9 @@ if (!session.configured) {
   document.querySelectorAll('.admin-only').forEach((el) => { el.hidden = !isAdmin(); });
   mountMenu($('app-menu'), { isAdmin: isAdmin() });
   route();
+  // Controle remoto: o computador pode mandar este aparelho abrir um roteiro
+  // (menos com alterações não salvas no editor, para não perdê-las).
+  if (isAdmin()) {
+    connectRemoteReader({ onReload: () => { if (!isDirty()) location.reload(); }, onOpenScript: (id) => { if (!isDirty()) location.href = `/read/${encodeURIComponent(id)}`; } });
+  }
 }

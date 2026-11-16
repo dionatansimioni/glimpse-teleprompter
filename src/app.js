@@ -5,7 +5,7 @@ import { AuthError, createAuth } from './auth.js';
 import { languageFromHeaders, translate } from '../public/js/i18n.js';
 import { createStore } from './store.js';
 import { createSettingsStore } from './settings-store.js';
-import { createRemoteHub, deviceLabel, REMOTE_ACTIONS } from './remote.js';
+import { createRemoteHub, deviceLabel, REMOTE_ACTIONS, REMOTE_NAVIGATION } from './remote.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -212,13 +212,21 @@ export async function createApp({
     res.write(': ok\n\n');
   };
 
+  // Sem `script`, o aparelho está na biblioteca (ainda assim pode ser controlado).
   api.get('/remote/reader', requireAdmin, async (req, res) => {
-    const doc = await store.get(String(req.query.script ?? ''));
-    if (!doc) throw new HttpError(404, 'server.scriptNotFound');
+    const wanted = String(req.query.script ?? '');
+    const doc = wanted ? await store.get(wanted) : null;
+    if (wanted && !doc) throw new HttpError(404, 'server.scriptNotFound');
     openStream(res);
-    const id = remote.addReader({ scriptId: doc.id, title: doc.title, device: deviceLabel(req.get('user-agent')), res });
+    const id = remote.addReader({
+      id: String(req.query.device ?? ''),
+      scriptId: doc?.id ?? null,
+      title: doc?.title ?? null,
+      device: deviceLabel(req.get('user-agent')),
+      res,
+    });
     if (!id) return res.end();
-    req.on('close', () => remote.removeReader(id));
+    req.on('close', () => remote.removeReader(id, res));
   });
 
   api.post('/remote/readers/:id/state', requireAdmin, (req, res) => {
@@ -232,10 +240,17 @@ export async function createApp({
     req.on('close', () => remote.removeController(res));
   });
 
-  api.post('/remote/readers/:id/commands', requireAdmin, (req, res) => {
+  api.post('/remote/readers/:id/commands', requireAdmin, async (req, res) => {
     const action = req.body?.action;
-    if (!REMOTE_ACTIONS.includes(action)) throw new HttpError(400, 'server.invalidCommand');
-    if (!remote.command(req.params.id, action)) throw new HttpError(404, 'server.readerNotFound');
+    let extra = {};
+    if (action === 'openScript') {
+      const doc = await store.get(String(req.body?.scriptId ?? ''));
+      if (!doc) throw new HttpError(404, 'server.scriptNotFound');
+      extra = { scriptId: doc.id };
+    } else if (!REMOTE_NAVIGATION.includes(action) && !REMOTE_ACTIONS.includes(action)) {
+      throw new HttpError(400, 'server.invalidCommand');
+    }
+    if (!remote.command(req.params.id, action, extra)) throw new HttpError(404, 'server.readerNotFound');
     res.status(204).end();
   });
 

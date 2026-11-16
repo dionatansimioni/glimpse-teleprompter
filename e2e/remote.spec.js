@@ -119,9 +119,58 @@ test.describe('Controle remoto', () => {
     }
   });
 
+  test('o computador escolhe qual roteiro aparece no celular e manda voltar à biblioteca', async ({ browser, adminPage: laptop, createScript }) => {
+    const stamp = Date.now();
+    const a = await createScript(`Troca A ${stamp}`, '# Primeiro\nTexto do primeiro roteiro');
+    const b = await createScript(`Troca B ${stamp}`, '# Segundo\nTexto do segundo roteiro');
+    const { ctx, phone } = await openPhoneReader(browser, a);
+    try {
+      await laptop.goto('/remote');
+      await chooseReader(laptop, a.title);
+      await expect(laptop.locator('#remote-scripts button[aria-current=true]')).toHaveText(a.title);
+
+      // Troca de roteiro sem recarregar a página do celular.
+      await phone.evaluate(() => { window.__sameDocument = true; });
+      await laptop.locator('#remote-scripts button', { hasText: b.title }).click();
+      await expect(phone.locator('#text h1')).toHaveText('Segundo');
+      await expect(phone.locator('#script-title')).toHaveText(b.title);
+      await expect(phone).toHaveURL(new RegExp(`/read/${b.id}$`));
+      expect(await phone.evaluate(() => window.__sameDocument)).toBe(true);
+      await expect(laptop.locator('#target-title')).toHaveText(b.title);
+      await expect(laptop.locator('#remote-scripts button[aria-current=true]')).toHaveText(b.title);
+
+      // O roteiro novo é controlado normalmente.
+      await laptop.click('#remote-play');
+      await expect(phone.locator('body')).toHaveClass(/playing/);
+      await laptop.click('#remote-play');
+      await expect(phone.locator('body')).not.toHaveClass(/playing/);
+
+      // F5 remoto: a página do celular recarrega e volta ao mesmo roteiro.
+      await phone.evaluate(() => { window.__sameDocument = true; });
+      await laptop.click('#reload-reader');
+      await expect.poll(() => phone.evaluate(() => window.__sameDocument ?? false).catch(() => false)).toBe(false); // página nova
+      await expect(phone.locator('#text h1')).toHaveText('Segundo');
+      await expect(laptop.locator('#target-title')).toHaveText(b.title);
+
+      // Sair para a biblioteca: o aparelho continua na lista, agora sem roteiro.
+      await laptop.click('#open-library');
+      await expect(phone).toHaveURL(/\/$/);
+      await expect(laptop.locator('#target-title')).toHaveText('Biblioteca');
+      await expect(laptop.locator('#playback')).toBeHidden();
+
+      // Da biblioteca, o computador abre um roteiro de novo.
+      await laptop.locator('#remote-scripts button', { hasText: a.title }).click();
+      await expect(phone).toHaveURL(new RegExp(`/read/${a.id}$`));
+      await expect(phone.locator('#text h1')).toHaveText('Primeiro');
+      await expect(laptop.locator('#target-title')).toHaveText(a.title);
+    } finally {
+      await ctx.close();
+    }
+  });
+
   test('sem leitores abertos mostra a explicação', async ({ adminPage: laptop }) => {
     await laptop.goto('/remote');
-    await expect(laptop.locator('#empty')).toContainText('Nenhum leitor aberto');
+    await expect(laptop.locator('#empty')).toContainText('Nenhum aparelho aberto');
   });
 
   test('página do controle remoto exige login', async ({ page }) => {

@@ -3,13 +3,19 @@
 // conexão aberta e os aparelhos respondem com requisições comuns.
 //
 //   leitor   --GET  /api/remote/reader (SSE)--> recebe "hello" (seu id) e "command"
+//            (?device=<id fixo do aparelho>&script=<roteiro aberto, se houver>;
+//            na biblioteca não há roteiro, e o aparelho continua controlável)
 //   leitor   --POST /api/remote/readers/:id/state--> informa o estado
 //   controle --GET  /api/remote/controller (SSE)--> recebe "readers" (lista + estados)
 //   controle --POST /api/remote/readers/:id/commands--> envia um comando
 import crypto from 'node:crypto';
-import { REMOTE_ACTIONS } from '../public/js/keys.js';
+import { REMOTE_ACTIONS, REMOTE_NAVIGATION } from '../public/js/keys.js';
 
-export { REMOTE_ACTIONS };
+export { REMOTE_ACTIONS, REMOTE_NAVIGATION };
+
+// Identificador fixo do aparelho, escolhido por ele: assim o controle continua
+// apontando para o mesmo aparelho quando ele troca de roteiro ou de página.
+export const isDeviceId = (value) => typeof value === 'string' && /^[\w-]{8,64}$/.test(value);
 
 // Nome curto do aparelho a partir do User-Agent, ex.: "Android · Chrome".
 export function deviceLabel(ua = '') {
@@ -69,17 +75,28 @@ export function createRemoteHub({ heartbeatMs = 20_000, maxReaders = 50, maxCont
   return {
     list,
 
-    addReader({ scriptId, title, device, res }) {
-      if (readers.size >= maxReaders) return null;
-      const id = crypto.randomBytes(9).toString('base64url');
+    // `id` (opcional) é o identificador fixo do aparelho. Se já houver um leitor
+    // com ele (troca de roteiro ou aba duplicada), o anterior é substituído.
+    addReader({ id: wanted, scriptId = null, title = null, device, res }) {
+      const id = isDeviceId(wanted) ? wanted : crypto.randomBytes(9).toString('base64url');
+      const previous = readers.get(id);
+      if (!previous && readers.size >= maxReaders) return null;
+      if (previous) {
+        send(previous.res, 'replaced', {}); // o leitor antigo não deve reconectar
+        previous.res.end();
+      }
       readers.set(id, { id, scriptId, title, device, res, since: Date.now(), state: sanitizeState({}) });
       send(res, 'hello', { id });
       broadcast();
       return id;
     },
 
-    removeReader(id) {
-      if (readers.delete(id)) broadcast();
+    // Com `res`, só remove se ainda for essa conexão (não a que a substituiu).
+    removeReader(id, res) {
+      const reader = readers.get(id);
+      if (!reader || (res && reader.res !== res)) return;
+      readers.delete(id);
+      broadcast();
     },
 
     updateState(id, state) {
@@ -94,10 +111,10 @@ export function createRemoteHub({ heartbeatMs = 20_000, maxReaders = 50, maxCont
     },
 
     // Retorna false se o leitor não existe mais.
-    command(id, action) {
+    command(id, action, extra = {}) {
       const reader = readers.get(id);
       if (!reader) return false;
-      send(reader.res, 'command', { action });
+      send(reader.res, 'command', { action, ...extra });
       return true;
     },
 

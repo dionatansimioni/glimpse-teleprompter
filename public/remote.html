@@ -41,6 +41,7 @@
         </div>
         <button type="button" id="change-reader" data-i18n="remote.change">Trocar leitor</button>
       </div>
+      <div id="playback">
       <div class="remote-progress" aria-hidden="true"><div id="target-progress"></div></div>
 
       <div class="remote-controls">
@@ -74,6 +75,16 @@
         </div>
       </div>
       <p class="hint" data-i18n="remote.keyboardHint">Os atalhos de teclado configurados também funcionam nesta página.</p>
+      </div>
+
+      <!-- Qual roteiro aparece no aparelho -->
+      <h2 class="remote-subtitle" data-i18n="remote.scripts">Roteiros</h2>
+      <ul id="remote-scripts" class="reader-list"></ul>
+      <p id="remote-no-scripts" class="hint" hidden data-i18n="remote.noScripts">Nenhum roteiro na biblioteca.</p>
+      <div class="remote-nav">
+        <button type="button" id="open-library" data-i18n="remote.openLibrary">Sair para a biblioteca</button>
+        <button type="button" id="reload-reader" data-i18n="remote.reload" data-i18n-attr="title:remote.reloadHint">Atualizar a página (F5)</button>
+      </div>
     </section>
   </main>
 </body>

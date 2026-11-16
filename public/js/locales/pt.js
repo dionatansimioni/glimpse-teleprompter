@@ -51,8 +51,8 @@ export default {
   'menu.remote': 'Controle remoto',
   'remote.pageTitle': 'Controle remoto · Glimpse',
   'remote.heading': 'Controle remoto',
-  'remote.intro': 'Escolha um leitor aberto para controlar daqui: reproduzir e pausar, velocidade, tamanho do texto e avançar ou voltar.',
-  'remote.empty': 'Nenhum leitor aberto. Abra um roteiro em outro aparelho (logado como administrador) e ele aparece aqui.',
+  'remote.intro': 'Escolha um aparelho aberto para controlar daqui: reproduzir e pausar, velocidade, tamanho do texto, avançar ou voltar e qual roteiro aparece nele.',
+  'remote.empty': 'Nenhum aparelho aberto. Abra o Glimpse em outro aparelho (logado como administrador) e ele aparece aqui.',
   'remote.change': 'Trocar leitor',
   'remote.playing': 'Reproduzindo',
   'remote.paused': 'Pausado',
@@ -60,6 +60,12 @@ export default {
   'remote.unknownDevice': 'Navegador',
   'remote.disconnected': 'O leitor foi fechado ou perdeu a conexão.',
   'remote.offline': 'Sem conexão com o servidor. Tentando reconectar…',
+  'remote.library': 'Biblioteca',
+  'remote.scripts': 'Roteiros',
+  'remote.noScripts': 'Nenhum roteiro na biblioteca.',
+  'remote.reload': 'Atualizar a página (F5)',
+  'remote.reloadHint': 'Recarrega a página do aparelho, por exemplo para aplicar configurações alteradas',
+  'remote.openLibrary': 'Sair para a biblioteca',
   'remote.keyboardHint': 'Os atalhos de teclado configurados também funcionam nesta página.',
 
   // Biblioteca

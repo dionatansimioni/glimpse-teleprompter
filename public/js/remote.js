@@ -1,7 +1,7 @@
 // Página de controle remoto: lista os leitores abertos e envia comandos ao escolhido.
 import { api, getSession, goToLogin, toast } from './common.js';
 import { t, translateDom } from './i18n.js';
-import { REMOTE_ACTIONS, bindingFromKeyEvent, findAction, defaultBindings, isRepeatable } from './keys.js';
+import { REMOTE_ACTIONS, REMOTE_NAVIGATION, bindingFromKeyEvent, findAction, defaultBindings, isRepeatable } from './keys.js';
 import { mountMenu } from './menu.js';
 
 translateDom();
@@ -26,7 +26,7 @@ function renderList() {
     button.dataset.reader = reader.id;
     const title = document.createElement('span');
     title.className = 'remote-title';
-    title.textContent = reader.title;
+    title.textContent = readerTitle(reader);
     const meta = document.createElement('span');
     meta.className = 'remote-meta';
     meta.textContent = describe(reader);
@@ -38,7 +38,11 @@ function renderList() {
   $('empty').hidden = readers.length > 0;
 }
 
+const inLibrary = (reader) => !reader.scriptId;
+const readerTitle = (reader) => (inLibrary(reader) ? t('remote.library') : reader.title);
+
 function describe(reader) {
+  if (inLibrary(reader)) return deviceName(reader);
   return [
     deviceName(reader),
     t(reader.state.playing ? 'remote.playing' : 'remote.paused'),
@@ -49,7 +53,9 @@ function describe(reader) {
 function renderControl() {
   const reader = selected();
   if (!reader) return;
-  $('target-title').textContent = reader.title;
+  $('target-title').textContent = readerTitle(reader);
+  $('playback').hidden = inLibrary(reader);
+  renderScripts(reader);
   $('target-meta').textContent = describe(reader);
   $('target-speed').textContent = reader.state.speed || '–';
   $('target-font').textContent = reader.state.fontSize ? `${reader.state.fontSize}px` : '–';
@@ -58,6 +64,43 @@ function renderControl() {
   $('remote-play').classList.toggle('is-playing', playing);
   $('remote-play-label').textContent = t(playing ? 'reader.pause' : 'reader.play');
   $('remote-play').setAttribute('aria-label', t(playing ? 'reader.pause' : 'reader.play'));
+}
+
+// Lista de roteiros para escolher o que aparece no aparelho. Só é refeita
+// quando muda (o estado do leitor chega várias vezes por segundo).
+let scripts = [];
+let scriptsKey = '';
+function renderScripts(reader) {
+  const key = `${reader.id}|${reader.scriptId}|${scripts.map((s) => s.id + s.title).join(',')}`;
+  if (key === scriptsKey) return;
+  scriptsKey = key;
+  $('remote-scripts').replaceChildren(...scripts.map((script) => {
+    const li = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'script-choice';
+    button.dataset.script = script.id;
+    if (script.id === reader.scriptId) button.setAttribute('aria-current', 'true');
+    const title = document.createElement('span');
+    title.className = 'remote-title';
+    title.textContent = script.title;
+    button.append(title);
+    button.addEventListener('click', () => send('openScript', { scriptId: script.id }));
+    li.append(button);
+    return li;
+  }));
+  $('remote-no-scripts').hidden = scripts.length > 0;
+  $('open-library').disabled = inLibrary(reader);
+}
+
+async function loadScripts() {
+  try {
+    scripts = await api('/scripts');
+    scriptsKey = '';
+    if (selected()) renderControl();
+  } catch (err) {
+    if (err.status === 401) goToLogin();
+  }
 }
 
 function showView() {
@@ -71,6 +114,7 @@ function showView() {
 function select(id, byUser = false) {
   selectedId = id;
   if (byUser) userChose = true;
+  loadScripts(); // a biblioteca pode ter mudado
   showView();
 }
 
@@ -82,15 +126,18 @@ function onReaders(next) {
     selectedId = null;
   }
   // Com um único leitor aberto, já abre os controles dele.
-  if (!selectedId && !userChose && readers.length === 1) selectedId = readers[0].id;
+  if (!selectedId && !userChose && readers.length === 1) {
+    selectedId = readers[0].id;
+    loadScripts();
+  }
   showView();
 }
 
-async function send(action) {
+async function send(action, extra = {}) {
   const reader = selected();
-  if (!reader || !REMOTE_ACTIONS.includes(action)) return;
+  if (!reader || !(REMOTE_ACTIONS.includes(action) || REMOTE_NAVIGATION.includes(action))) return;
   try {
-    await api(`/remote/readers/${reader.id}/commands`, { method: 'POST', body: { action } });
+    await api(`/remote/readers/${reader.id}/commands`, { method: 'POST', body: { action, ...extra } });
   } catch (err) {
     if (err.status === 401) return goToLogin();
     toast(err.message, 3000);
@@ -100,6 +147,8 @@ async function send(action) {
 for (const button of document.querySelectorAll('[data-remote]')) {
   button.addEventListener('click', () => send(button.dataset.remote));
 }
+$('open-library').addEventListener('click', () => send('openLibrary'));
+$('reload-reader').addEventListener('click', () => send('reload'));
 $('change-reader').addEventListener('click', () => {
   selectedId = null;
   userChose = true;
@@ -134,6 +183,7 @@ if (!session.configured) {
 } else {
   mountMenu($('app-menu'), { isAdmin: true });
   api('/settings').then((data) => { bindings = data.bindings; }).catch(() => {});
+  loadScripts();
   const source = new EventSource('/api/remote/controller');
   source.addEventListener('open', () => setConnected(true));
   source.addEventListener('error', () => setConnected(false));

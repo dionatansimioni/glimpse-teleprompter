@@ -29,7 +29,7 @@ const timeLeftEl = $('time-left');
 const countdownEl = $('countdown');
 const flashEl = $('speed-flash');
 
-const scriptId = decodeURIComponent(location.pathname.split('/').filter(Boolean).pop() ?? '');
+let scriptId = decodeURIComponent(location.pathname.split('/').filter(Boolean).pop() ?? '');
 let scriptTitle = '';
 
 // Configurações vêm do servidor: a geral vale para todos os roteiros e
@@ -697,6 +697,9 @@ function startRemote() {
   remote = connectRemoteReader({
     scriptId,
     onCommand: run,
+    onOpenScript: openScript,
+    onOpenLibrary: () => { flushAll(); location.href = '/'; },
+    onReload: () => { flushAll(); location.reload(); },
     getState: () => ({
       playing: playing || Boolean(countdownTimer),
       speed: settings.speed,
@@ -736,6 +739,42 @@ function addEndMark() {
   end.textContent = t('reader.end');
 }
 
+// Mostra um roteiro (com os ajustes dele) no lugar do atual.
+function showScript(doc) {
+  overrides = doc.settings ?? {};
+  recompute();
+  scriptTitle = doc.title;
+  document.title = `${doc.title} · Glimpse`;
+  $('script-title').textContent = doc.title;
+  text.innerHTML = renderMarkdown(doc.content);
+  addEndMark();
+}
+
+// Troca de roteiro pelo controle remoto, sem recarregar a página: assim a tela
+// cheia e a tela acesa continuam valendo (recarregar exigiria um toque no celular).
+let opening = 0;
+async function openScript(id) {
+  if (id === scriptId) return;
+  const ticket = ++opening;
+  try {
+    const doc = await api(`/scripts/${encodeURIComponent(id)}`);
+    if (ticket !== opening) return; // chegou um pedido mais novo
+    flushAll(); // ajustes pendentes pertencem ao roteiro que está saindo
+    pause();
+    tween = null;
+    closePanel();
+    scriptId = id;
+    pos = 0;
+    history.replaceState(null, '', `/read/${encodeURIComponent(id)}`);
+    showScript(doc);
+    measure();
+    remote?.setScript(id);
+  } catch (err) {
+    if (err.status === 401) return goToLogin();
+    toast(err.message, 4000);
+  }
+}
+
 async function init() {
   applySettings();
   try {
@@ -747,14 +786,8 @@ async function init() {
     canSave = session.authenticated;
     globalSettings = global.settings;
     bindings = global.bindings;
-    overrides = doc.settings ?? {};
     if (canSave) await migrateLegacySettings(global.saved).catch(() => {});
-    recompute();
-    scriptTitle = doc.title;
-    document.title = `${doc.title} · Glimpse`;
-    $('script-title').textContent = doc.title;
-    text.innerHTML = renderMarkdown(doc.content);
-    addEndMark();
+    showScript(doc);
     if (canSave) startRemote(); // só o administrador pode ser controlado
   } catch (err) {
     if (err.status === 401) return goToLogin();

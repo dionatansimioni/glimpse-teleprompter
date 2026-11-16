@@ -22,7 +22,7 @@
     'f.remote.t': 'Controles Bluetooth',
     'f.remote.d': 'Associe qualquer tecla, passador de slides, botão de mídia ou de gamepad a qualquer ação. Os atalhos ficam no servidor e valem em todos os aparelhos.',
     'f.remote2.t': 'Controle remoto pelo computador',
-    'f.remote2.d': 'Abra o controle remoto num laptop e conduza o leitor no celular: reproduzir, pausar, velocidade, tamanho do texto e saltos, por botões ou pelo teclado.',
+    'f.remote2.d': 'Abra o controle remoto num laptop e conduza o leitor no celular: reproduzir, pausar, velocidade, tamanho do texto e saltos, por botões ou pelo teclado. Escolha também qual roteiro aparece no celular.',
     'gallery.remote': 'Controle remoto: conduza o leitor do celular por outro computador.',
     'f.screen.t': 'Tela cheia e tela sempre acesa',
     'f.screen.d': 'Leia em tela cheia sem a tela apagar no meio da gravação, mesmo por HTTP na sua rede local.',

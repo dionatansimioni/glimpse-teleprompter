@@ -14,7 +14,7 @@ Open source, self-hosted web teleprompter. Upload your scripts in Markdown from 
 - **Full screen** (and installable as an app with "Add to Home Screen").
 - **Universal settings**: text size, speed, mirroring, shortcuts and so on are saved on the server and apply to every script, on any device. When needed, a script can have **custom settings** that override only the items you choose.
 - **Customizable shortcuts**: keyboard, Bluetooth remotes (keys, page turners and media buttons) and gamepads.
-- **Remote control**: drive the reader on your phone from a laptop or desktop (play/pause, speed, text size, jump back/forward).
+- **Remote control**: drive the reader on your phone from a laptop or desktop (play/pause, speed, text size, jump back/forward), choose which script it shows and reload its page.
 - **Touch**: tap the screen to play/pause, drag to move the text.
 - **English and Portuguese**: pick the language on the sign-in screen (and switch it later from the menu).
 - **Screen stays on** while reading, even without HTTPS.
@@ -104,9 +104,10 @@ The menu in the top-right corner of the library has **Teleprompter settings** (t
 
 Control a reader that is open on another device, such as the phone mounted on the camera, from a laptop or desktop:
 
-1. Open the script in the reader on the phone (signed in as administrator).
-2. On the computer, open the menu → **Remote control** and pick the reader from the list (if only one is open, it is selected automatically).
+1. Open Glimpse on the phone (signed in as administrator), in the library or in a script. Keep the tab open and the screen on.
+2. On the computer, open the menu → **Remote control** and pick the device from the list (if only one is open, it is selected automatically).
 3. Use the buttons: **play / pause**, **speed − / +**, **text size − / +** and **jump back / forward**. Your configured keyboard shortcuts work on this page too, so a keyboard or a Bluetooth remote connected to the computer can drive the phone.
+4. Under **Scripts**, tap one to make it appear on the phone, or **Go to the library** to leave the script. **Reload the page (F5)** reloads the phone's page, for example to apply changed settings. Switching from one script to another does not reload the phone's page, so full screen and the screen-on lock stay active; leaving for the library does reload it, and the browser leaves full screen.
 
 The page shows the reader's state (playing or paused, speed, size and how much was read). It works over plain HTTP on your local network; if the connection drops, the phone keeps scrolling on its own and the control reconnects automatically.
 

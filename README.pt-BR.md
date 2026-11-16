@@ -14,7 +14,7 @@ Teleprompter web, open source e auto-hospedado. Você sobe seus roteiros em Mark
 - **Tela cheia** (e instalável como app pela opção "Adicionar à tela inicial").
 - **Configuração universal**: tamanho do texto, velocidade, espelhamento, atalhos etc. ficam salvos no servidor e valem para todos os roteiros, em qualquer aparelho. Quando precisar, um roteiro pode ter **ajustes próprios** que sobrescrevem só os itens escolhidos.
 - **Atalhos customizáveis**: teclado, controles Bluetooth (teclas, page-turners e botões de mídia) e gamepads.
-- **Controle remoto**: conduza o leitor do celular por um laptop ou desktop (reproduzir/pausar, velocidade, tamanho do texto, voltar/avançar trecho).
+- **Controle remoto**: conduza o leitor do celular por um laptop ou desktop (reproduzir/pausar, velocidade, tamanho do texto, voltar/avançar trecho), escolher qual roteiro aparece nele e recarregar a página dele.
 - **Toque**: tocar na tela reproduz/pausa e arrastar move o texto.
 - **Português e inglês**: o idioma é escolhido na tela de login (e pode ser trocado no menu).
 - **Tela sempre acesa** durante a leitura, mesmo sem HTTPS.
@@ -104,9 +104,10 @@ O menu no canto superior direito da biblioteca tem **Configurações do teleprom
 
 Controle por um laptop ou desktop um leitor aberto em outro aparelho, como o celular preso na câmera:
 
-1. Abra o roteiro no leitor do celular (logado como administrador).
-2. No computador, abra o menu → **Controle remoto** e escolha o leitor na lista (se só houver um aberto, ele é escolhido automaticamente).
+1. Abra o Glimpse no celular (logado como administrador), na biblioteca ou num roteiro. Mantenha a aba aberta e a tela ligada.
+2. No computador, abra o menu → **Controle remoto** e escolha o aparelho na lista (se só houver um aberto, ele é escolhido automaticamente).
 3. Use os botões: **reproduzir / pausar**, **velocidade − / +**, **tamanho do texto − / +** e **voltar / avançar trecho**. Os atalhos de teclado configurados também funcionam nessa página, então um teclado ou controle Bluetooth ligado ao computador conduz o celular.
+4. Em **Roteiros**, toque em um para ele aparecer no celular, ou em **Sair para a biblioteca** para sair do roteiro. **Atualizar a página (F5)** recarrega a página do celular, por exemplo para aplicar configurações alteradas. Trocar de um roteiro para outro não recarrega a página do celular, então a tela cheia e a tela acesa continuam valendo; sair para a biblioteca recarrega, e o navegador sai da tela cheia.
 
 A página mostra o estado do leitor (reproduzindo ou pausado, velocidade, tamanho e quanto já foi lido). Funciona por HTTP na rede local; se a conexão cair, o celular continua rolando sozinho e o controle reconecta automaticamente.
 

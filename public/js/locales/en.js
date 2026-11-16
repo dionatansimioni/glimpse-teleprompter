@@ -51,8 +51,8 @@ export default {
   'menu.remote': 'Remote control',
   'remote.pageTitle': 'Remote control · Glimpse',
   'remote.heading': 'Remote control',
-  'remote.intro': 'Pick an open reader to control from here: play and pause, speed, text size and jumping back or forward.',
-  'remote.empty': 'No open readers. Open a script on another device (signed in as administrator) and it shows up here.',
+  'remote.intro': 'Pick an open device to control from here: play and pause, speed, text size, jumping back or forward, and which script it shows.',
+  'remote.empty': 'No open devices. Open Glimpse on another device (signed in as administrator) and it shows up here.',
   'remote.change': 'Change reader',
   'remote.playing': 'Playing',
   'remote.paused': 'Paused',
@@ -60,6 +60,12 @@ export default {
   'remote.unknownDevice': 'Browser',
   'remote.disconnected': 'The reader was closed or lost its connection.',
   'remote.offline': 'No connection to the server. Reconnecting…',
+  'remote.library': 'Library',
+  'remote.scripts': 'Scripts',
+  'remote.noScripts': 'No scripts in the library.',
+  'remote.reload': 'Reload the page (F5)',
+  'remote.reloadHint': 'Reloads the device page, for example to apply changed settings',
+  'remote.openLibrary': 'Go to the library',
   'remote.keyboardHint': 'Your configured keyboard shortcuts also work on this page.',
 
   // Library

@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { createRemoteHub, deviceLabel, sanitizeState, REMOTE_ACTIONS } from '../src/remote.js';
+import { createRemoteHub, deviceLabel, sanitizeState, REMOTE_ACTIONS, REMOTE_NAVIGATION } from '../src/remote.js';
 import { ACTION_IDS } from '../public/js/keys.js';
 import { startServer } from './helpers.js';
 
@@ -67,6 +67,55 @@ describe('Hub do controle remoto', () => {
       assert.deepEqual(controller.events('readers').at(-1), []);
       assert.equal(hub.command(id, 'togglePlay'), false);
       assert.equal(hub.updateState(id, {}), false);
+    } finally {
+      hub.close();
+    }
+  });
+
+  test('aparelho com id fixo: na biblioteca (sem roteiro) e substituído ao trocar de conexão', () => {
+    const hub = createRemoteHub();
+    try {
+      const controller = fakeRes();
+      hub.addController(controller);
+
+      const first = fakeRes();
+      assert.equal(hub.addReader({ id: 'aparelho-fixo-1', device: 'Android', res: first }), 'aparelho-fixo-1');
+      assert.deepEqual(controller.events('readers').at(-1)[0].scriptId, null);
+      assert.deepEqual(controller.events('readers').at(-1)[0].title, null);
+
+      // Abriu um roteiro: mesma identidade, conexão nova.
+      const second = fakeRes();
+      assert.equal(hub.addReader({ id: 'aparelho-fixo-1', scriptId: 's1', title: 'Roteiro', device: 'Android', res: second }), 'aparelho-fixo-1');
+      assert.equal(hub.list().length, 1);
+      assert.equal(controller.events('readers').at(-1)[0].scriptId, 's1');
+      assert.equal(first.events('replaced').length, 1, 'a conexão antiga é avisada');
+      assert.equal(first.ended, true);
+
+      // A conexão antiga fechando não derruba a nova.
+      hub.removeReader('aparelho-fixo-1', first);
+      assert.equal(hub.list().length, 1);
+      hub.removeReader('aparelho-fixo-1', second);
+      assert.equal(hub.list().length, 0);
+
+      // Id inválido vira um id gerado pelo servidor.
+      const id = hub.addReader({ id: 'x', device: '', res: fakeRes() });
+      assert.notEqual(id, 'x');
+    } finally {
+      hub.close();
+    }
+  });
+
+  test('comando de navegação leva o roteiro', () => {
+    const hub = createRemoteHub();
+    try {
+      const reader = fakeRes();
+      const id = hub.addReader({ device: '', res: reader });
+      assert.equal(hub.command(id, 'openScript', { scriptId: 's2' }), true);
+      assert.equal(hub.command(id, 'openLibrary'), true);
+      assert.deepEqual(reader.events('command'), [{ action: 'openScript', scriptId: 's2' }, { action: 'openLibrary' }]);
+      assert.deepEqual([...REMOTE_NAVIGATION], ['openScript', 'openLibrary', 'reload']);
+      assert.equal(hub.command(id, 'reload'), true);
+      assert.deepEqual(reader.events('command').at(-1), { action: 'reload' });
     } finally {
       hub.close();
     }
@@ -155,6 +204,62 @@ describe('API do controle remoto', () => {
       assert.equal(res.status, 404);
       assert.match((await res.json()).error, /não está mais aberto/);
       controller.close();
+    } finally {
+      await srv.close();
+    }
+  });
+
+  test('aparelho na biblioteca aparece, troca de roteiro e mantém a identidade', async () => {
+    const { srv, doc } = await setup();
+    const other = await (await srv.request('/api/scripts', { method: 'POST', body: { title: 'Outro', content: 'Texto' } })).json();
+    const device = 'aparelho-do-teste-01';
+    try {
+      const controller = await srv.stream('/api/remote/controller');
+      await controller.next('readers');
+
+      const library = await srv.stream(`/api/remote/reader?device=${device}`);
+      assert.equal((await library.next('hello')).id, device);
+      let list = await controller.next('readers');
+      assert.equal(list[0].id, device);
+      assert.equal(list[0].scriptId, null);
+
+      let res = await srv.request(`/api/remote/readers/${device}/commands`, { method: 'POST', body: { action: 'openScript', scriptId: doc.id } });
+      assert.equal(res.status, 204);
+      assert.deepEqual(await library.next('command'), { action: 'openScript', scriptId: doc.id });
+
+      // O aparelho abriu o roteiro: mesma identidade, agora com título.
+      const reader = await srv.stream(`/api/remote/reader?device=${device}&script=${doc.id}`);
+      await reader.next('hello');
+      list = await controller.next('readers');
+      assert.equal(list.length, 1);
+      assert.equal(list[0].id, device);
+      assert.equal(list[0].title, 'Ao vivo');
+
+      res = await srv.request(`/api/remote/readers/${device}/commands`, { method: 'POST', body: { action: 'openScript', scriptId: other.id } });
+      assert.equal(res.status, 204);
+      assert.deepEqual(await reader.next('command'), { action: 'openScript', scriptId: other.id });
+      res = await srv.request(`/api/remote/readers/${device}/commands`, { method: 'POST', body: { action: 'openLibrary' } });
+      assert.equal(res.status, 204);
+      assert.deepEqual(await reader.next('command'), { action: 'openLibrary' });
+
+      reader.close();
+      library.close();
+      controller.close();
+    } finally {
+      await srv.close();
+    }
+  });
+
+  test('abrir roteiro exige um roteiro que exista', async () => {
+    const { srv } = await setup();
+    try {
+      const reader = await srv.stream('/api/remote/reader?device=aparelho-do-teste-02');
+      await reader.next('hello');
+      let res = await srv.request('/api/remote/readers/aparelho-do-teste-02/commands', { method: 'POST', body: { action: 'openScript', scriptId: 'naoexiste123' } });
+      assert.equal(res.status, 404);
+      res = await srv.request('/api/remote/readers/aparelho-do-teste-02/commands', { method: 'POST', body: { action: 'openScript' } });
+      assert.equal(res.status, 404);
+      reader.close();
     } finally {
       await srv.close();
     }

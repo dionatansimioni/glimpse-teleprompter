@@ -32,6 +32,11 @@ export const REMOTE_ACTIONS = Object.freeze([
   'togglePlay', 'speedDown', 'speedUp', 'fontDown', 'fontUp', 'jumpBack', 'jumpForward',
 ]);
 
+// Comandos do controle remoto que trocam o que o aparelho mostra (não têm tecla).
+// "openScript" leva o id do roteiro; "openLibrary" volta para a biblioteca;
+// "reload" recarrega a página (F5), por exemplo para pegar configurações novas.
+export const REMOTE_NAVIGATION = Object.freeze(['openScript', 'openLibrary', 'reload']);
+
 export function defaultBindings() {
   return Object.fromEntries(ACTIONS.map((a) => [a.id, [...a.keys]]));
 }
