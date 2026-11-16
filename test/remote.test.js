@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { createRemoteHub, deviceLabel, sanitizeState, REMOTE_ACTIONS, REMOTE_NAVIGATION } from '../src/remote.js';
 import { ACTION_IDS } from '../public/js/keys.js';
 import { startServer } from './helpers.js';
+import { newDeviceId } from '../public/js/device-id.js';
+import { isDeviceId } from '../src/remote.js';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 // Resposta falsa: guarda o que foi escrito como eventos.
 function fakeRes() {
@@ -133,6 +137,29 @@ describe('Hub do controle remoto', () => {
     assert.equal(a.ended, true);
     assert.equal(c.ended, true);
     assert.deepEqual(hub.list(), []);
+  });
+});
+
+describe('Identificador do aparelho', () => {
+  test('é gerado sem crypto.randomUUID (HTTP pelo IP não é contexto seguro) e o servidor aceita', () => {
+    // Só getRandomValues, como num navegador fora de HTTPS/localhost.
+    const insecure = { getRandomValues: (bytes) => { bytes.fill(171); return bytes; } };
+    assert.equal(insecure.randomUUID, undefined);
+    const id = newDeviceId(insecure);
+    assert.equal(id.length, 22);
+    assert.ok(isDeviceId(id));
+    // Até sem crypto nenhum não pode quebrar.
+    assert.ok(isDeviceId(newDeviceId(null)));
+    assert.notEqual(newDeviceId(null), newDeviceId(null));
+  });
+
+  test('o código do navegador não usa APIs que exigem HTTPS', async () => {
+    const dir = path.join(import.meta.dirname, '..', 'public', 'js');
+    for (const file of await fs.readdir(dir)) {
+      if (!file.endsWith('.js')) continue;
+      const source = await fs.readFile(path.join(dir, file), 'utf8');
+      assert.doesNotMatch(source, /randomUUID\s*\(/, `${file}: crypto.randomUUID só existe em contexto seguro`);
+    }
   });
 });
 

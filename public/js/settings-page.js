@@ -81,7 +81,7 @@ if (!session.configured) {
 } else if (!session.authenticated) {
   goToLogin();
 } else {
-  mountMenu($('app-menu'), { isAdmin: true });
+  mountMenu($('app-menu'), { isAdmin: true, version: session.version });
   const data = await api('/settings');
   settings = data.settings;
   bindings = data.bindings;

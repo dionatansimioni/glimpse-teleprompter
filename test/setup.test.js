@@ -43,7 +43,7 @@ describe('Setup inicial', () => {
     try {
       const res = await srv.setup();
       assert.equal(res.status, 201);
-      assert.deepEqual(await session(srv), { configured: true, authenticated: true, publicRead: false });
+      assert.deepEqual({ ...(await session(srv)), version: undefined }, { configured: true, authenticated: true, publicRead: false, version: undefined });
       const created = await srv.request('/api/scripts', { method: 'POST', body: { title: 'a', content: 'b' } });
       assert.equal(created.status, 201);
     } finally {

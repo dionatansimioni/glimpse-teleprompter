@@ -293,11 +293,18 @@ if (!session.configured) {
   goToLogin();
 } else {
   document.querySelectorAll('.admin-only').forEach((el) => { el.hidden = !isAdmin(); });
-  mountMenu($('app-menu'), { isAdmin: isAdmin() });
+  mountMenu($('app-menu'), { isAdmin: isAdmin(), version: session.version });
   route();
   // Controle remoto: o computador pode mandar este aparelho abrir um roteiro
   // (menos com alterações não salvas no editor, para não perdê-las).
   if (isAdmin()) {
-    connectRemoteReader({ onReload: () => { if (!isDirty()) location.reload(); }, onOpenScript: (id) => { if (!isDirty()) location.href = `/read/${encodeURIComponent(id)}`; } });
+    try {
+      connectRemoteReader({
+        onReload: () => { if (!isDirty()) location.reload(); },
+        onOpenScript: (id) => { if (!isDirty()) location.href = `/read/${encodeURIComponent(id)}`; },
+      });
+    } catch (err) {
+      console.error('Controle remoto indisponível:', err); // a biblioteca continua normalmente
+    }
   }
 }

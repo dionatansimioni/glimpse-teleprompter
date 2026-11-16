@@ -131,7 +131,7 @@ main.container {
 .toolbar input[type="search"] { flex: 1 1 220px; width: auto; }
 
 /* ---------- Lista de roteiros ---------- */
-.script-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.script-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .script {
   display: flex;
   align-items: center;
@@ -140,6 +140,7 @@ main.container {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  min-width: 0;
 }
 .script-main { flex: 1; min-width: 0; text-decoration: none; }
 .script-title {
@@ -156,7 +157,7 @@ main.container {
 
 @media (max-width: 640px) {
   .script { flex-direction: column; align-items: stretch; }
-  .script-actions { justify-content: flex-end; }
+  .script-actions { flex-wrap: wrap; flex-shrink: 1; justify-content: flex-end; }
 }
 
 .empty {
@@ -339,6 +340,7 @@ main.container {
 }
 .menu-list [role="menuitemradio"][aria-checked="true"]::before { content: '✓'; color: var(--accent); }
 .menu-label { padding: 6px 12px 2px; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.menu-version { display: block; padding: 4px 12px 6px; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; user-select: text; }
 .menu-sep { height: 1px; margin: 6px 4px; background: var(--border); }
 #logout { color: var(--danger); }
 

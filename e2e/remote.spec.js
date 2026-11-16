@@ -168,6 +168,33 @@ test.describe('Controle remoto', () => {
     }
   });
 
+  test('celular em HTTP pelo IP (sem contexto seguro) aparece no controle remoto', async ({ browser, adminPage: laptop, createScript }) => {
+    const doc = await createScript(`Sem HTTPS ${Date.now()}`);
+    const ctx = await browser.newContext({ ...devices['Pixel 7'], locale: 'pt-BR' });
+    // Fora de HTTPS/localhost o navegador não oferece crypto.randomUUID.
+    await ctx.addInitScript(() => { Crypto.prototype.randomUUID = undefined; });
+    const phone = await ctx.newPage();
+    const errors = [];
+    phone.on('pageerror', (err) => errors.push(err.message));
+    try {
+      await phone.request.post('/api/login', { headers: { 'x-glimpse': '1' }, data: { password: E2E_PASSWORD } });
+
+      // Na biblioteca...
+      await phone.goto('/');
+      await expect(phone.locator('.script').first()).toBeVisible();
+      await laptop.goto('/remote');
+      await expect(laptop.locator('#target-title')).toHaveText('Biblioteca'); // um só aparelho: já selecionado
+
+      // ...e dentro de um roteiro.
+      await phone.goto(`/read/${doc.id}`);
+      await expect(phone.locator('#text h1').first()).toBeVisible();
+      await expect(laptop.locator('#target-title')).toHaveText(doc.title);
+      expect(errors).toEqual([]);
+    } finally {
+      await ctx.close();
+    }
+  });
+
   test('sem leitores abertos mostra a explicação', async ({ adminPage: laptop }) => {
     await laptop.goto('/remote');
     await expect(laptop.locator('#empty')).toContainText('Nenhum aparelho aberto');

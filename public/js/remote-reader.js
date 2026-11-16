@@ -3,6 +3,7 @@
 // tamanho, progresso). Funciona no leitor (com roteiro) e na biblioteca (sem).
 import { api } from './common.js';
 import { REMOTE_ACTIONS } from './keys.js';
+import { newDeviceId } from './device-id.js';
 
 const STATE_INTERVAL_MS = 250;
 const DEVICE_KEY = 'glimpse.device';
@@ -14,12 +15,12 @@ function deviceId() {
   try {
     let id = sessionStorage.getItem(DEVICE_KEY);
     if (!id) {
-      id = crypto.randomUUID().replaceAll('-', '').slice(0, 22);
+      id = newDeviceId();
       sessionStorage.setItem(DEVICE_KEY, id);
     }
     return id;
   } catch {
-    return crypto.randomUUID().replaceAll('-', '').slice(0, 22); // armazenamento indisponível
+    return newDeviceId(); // armazenamento indisponível
   }
 }
 

@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AuthError, createAuth } from './auth.js';
@@ -9,6 +10,7 @@ import { createRemoteHub, deviceLabel, REMOTE_ACTIONS, REMOTE_NAVIGATION } from 
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
+const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 const MAX_TITLE = 200;
 const MAX_CONTENT = 1_000_000;
 
@@ -100,10 +102,13 @@ export async function createApp({
   const requireReader = (req, res, next) => (publicRead ? next() : requireAdmin(req, res, next));
 
   api.get('/session', (req, res) => {
+    const authenticated = auth.isAuthenticated(req);
     res.json({
       configured: auth.isConfigured(),
-      authenticated: auth.isAuthenticated(req),
+      authenticated,
       publicRead,
+      // A versão só é informada ao administrador (não ajuda a identificar o servidor).
+      ...(authenticated && { version: VERSION }),
     });
   });
 

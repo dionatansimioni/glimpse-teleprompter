@@ -22,6 +22,8 @@ const TEMPLATE = `
     <button role="menuitem" type="button" id="logout" data-admin data-i18n="menu.logout"></button>
     <div class="menu-sep" role="separator" data-guest></div>
     <a role="menuitem" href="/login" id="login-link" data-guest data-i18n="menu.login"></a>
+    <div class="menu-sep" role="separator" data-version hidden></div>
+    <span class="menu-version" id="menu-version" data-version hidden></span>
   </div>
 </div>
 <dialog id="password-dialog" class="dialog">
@@ -42,10 +44,14 @@ const TEMPLATE = `
   </form>
 </dialog>`;
 
-export function mountMenu(container, { isAdmin }) {
+export function mountMenu(container, { isAdmin, version = '' }) {
   container.innerHTML = TEMPLATE; // modelo fixo, sem dados do usuário
   for (const el of container.querySelectorAll('[data-admin]')) el.hidden = !isAdmin;
   for (const el of container.querySelectorAll('[data-guest]')) el.hidden = isAdmin;
+  if (isAdmin && version) {
+    container.querySelector('.menu-version').textContent = `Glimpse v${version}`;
+    for (const el of container.querySelectorAll('[data-version]')) el.hidden = false;
+  }
   translateDom(container);
 
   const button = container.querySelector('.menu-button');

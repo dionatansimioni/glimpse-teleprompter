@@ -181,7 +181,7 @@ if (!session.configured) {
 } else if (!session.authenticated) {
   goToLogin();
 } else {
-  mountMenu($('app-menu'), { isAdmin: true });
+  mountMenu($('app-menu'), { isAdmin: true, version: session.version });
   api('/settings').then((data) => { bindings = data.bindings; }).catch(() => {});
   loadScripts();
   const source = new EventSource('/api/remote/controller');

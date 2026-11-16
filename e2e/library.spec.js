@@ -12,6 +12,26 @@ test('redireciona para o login e entra com a senha', async ({ page }) => {
   await expect(page.locator('#new-script')).toBeVisible();
 });
 
+test('a biblioteca cabe na largura da tela, sem rolagem horizontal', async ({ adminPage: page, createScript }) => {
+  await createScript(`Título bem comprido para testar a quebra de linha na biblioteca do celular ${Date.now()}`);
+  await page.goto('/');
+  await expect(page.locator('.script').first()).toBeVisible();
+  const { scroll, client } = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+  expect(scroll).toBeLessThanOrEqual(client);
+  // Todos os botões de cada roteiro ficam dentro da tela.
+  for (const button of await page.locator('.script-actions > *').all()) {
+    const box = await button.boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(client);
+  }
+});
+
+test('o menu mostra a versão do Glimpse', async ({ adminPage: page }) => {
+  await page.goto('/');
+  await page.click('#menu-button');
+  await expect(page.locator('#menu-version')).toHaveText(/^Glimpse v\d+\.\d+\.\d+/);
+});
+
 test('cria, edita e exclui um roteiro pela interface', async ({ adminPage: page }) => {
   const title = `Vídeo ${Date.now()}`;
   await page.goto('/');

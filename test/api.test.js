@@ -20,6 +20,20 @@ describe('API de roteiros', () => {
     assert.equal(res.status, 401);
   });
 
+  test('a versão do app só aparece para o administrador logado', async () => {
+    const pkg = JSON.parse(await fs.readFile(path.join(import.meta.dirname, '..', 'package.json'), 'utf8'));
+    const other = await startServer();
+    try {
+      assert.equal((await (await other.request('/api/session')).json()).version, undefined);
+      await other.login();
+      const session = await (await other.request('/api/session')).json();
+      assert.equal(session.version, pkg.version);
+      assert.match(session.version, /^\d+\.\d+\.\d+/);
+    } finally {
+      await other.close();
+    }
+  });
+
   test('sessão informa que não está autenticado', async () => {
     const res = await srv.request('/api/session');
     assert.deepEqual(await res.json(), { configured: true, authenticated: false, publicRead: false });
@@ -178,7 +192,7 @@ describe('Sessões', () => {
     const b = await startServer({ dataDir: a.dataDir, configure: false });
     try {
       const session = await (await b.request('/api/session', { auth: false, headers: { cookie } })).json();
-      assert.deepEqual(session, { configured: true, authenticated: true, publicRead: false });
+      assert.deepEqual({ ...session, version: undefined }, { configured: true, authenticated: true, publicRead: false, version: undefined });
     } finally {
       await b.close();
     }

@@ -694,7 +694,15 @@ window.addEventListener('glimpse:language', () => {
 
 // ---------- Controle remoto (outro aparelho controla este leitor) ----------
 function startRemote() {
-  remote = connectRemoteReader({
+  try {
+    remote = createRemote();
+  } catch (err) {
+    console.error('Controle remoto indisponível:', err); // a leitura continua normalmente
+  }
+}
+
+function createRemote() {
+  return connectRemoteReader({
     scriptId,
     onCommand: run,
     onOpenScript: openScript,
