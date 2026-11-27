@@ -10,7 +10,7 @@ const exists = (file) => fs.access(path.join(ROOT, file)).then(() => true, () =>
 test('site: todo texto marcado tem tradução para português', async () => {
   const html = await read('site/index.html');
   const script = await read('site/script.js');
-  const keys = [...html.matchAll(/data-i18n="([^"]+)"/g)].map((m) => m[1]);
+  const keys = [...html.matchAll(/data-i18n(?:-aria)?="([^"]+)"/g)].map((m) => m[1]);
   assert.ok(keys.length > 30);
   for (const key of new Set(keys)) {
     assert.ok(script.includes(`'${key}':`) || script.includes(` ${key}:`), `sem tradução pt: ${key}`);

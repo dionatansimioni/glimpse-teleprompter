@@ -11,6 +11,47 @@
     'hero.start': 'Começar',
     'hero.github': 'Ver no GitHub',
     'hero.note': 'Roda com Docker em amd64 e arm64, incluindo Raspberry Pi.',
+    'demo.label': 'Demonstração do teleprompter. Espaço reproduz ou pausa, as setas mudam a velocidade e saltam.',
+    'demo.h1': 'Abertura',
+    'demo.1a': 'Olá! Este é um',
+    'demo.1b': 'teleprompter de verdade',
+    'demo.1c': ', rodando aqui na página.',
+    'demo.2a': 'Leia junto, ou',
+    'demo.2b': 'assuma o controle',
+    'demo.2c': ': pause, mude a velocidade, espelhe o texto.',
+    'demo.cue1': 'olhar para a câmera',
+    'demo.h2': 'Seu servidor',
+    'demo.3': 'Você escreve no computador, em Markdown. O celular em frente à lente mostra tudo grande e legível.',
+    'demo.4a': 'Sem conta, sem nuvem, sem rastreamento. Seus roteiros',
+    'demo.4b': 'ficam com você',
+    'demo.4c': '.',
+    'demo.cue2': 'sorrir e cortar',
+    'demo.h3': 'Encerramento',
+    'demo.5': 'Um comando do Docker e você está pronto para a próxima tomada.',
+    'demo.play': 'Reproduzir ou pausar',
+    'demo.back': 'Voltar trecho',
+    'demo.forward': 'Avançar trecho',
+    'demo.slower': 'Mais devagar',
+    'demo.faster': 'Mais rápido',
+    'demo.speed': 'Vel.',
+    'demo.mirror': 'Espelhar',
+    'md.hint': 'arraste sobre a tela para comparar',
+    'md.h': 'Abertura',
+    'md.a': 'Hoje vamos testar o',
+    'md.b': 'Fedora',
+    'md.c': 'e a',
+    'md.d': 'atualização',
+    'md.cue': 'mostrar a tela',
+    'md.e': 'Fiquem até o final!',
+    'md.range': 'Comparar o Markdown original com o teleprompter',
+    'gallery.tabs': 'Telas',
+    'tab.library': 'Biblioteca',
+    'tab.settings': 'Configurações',
+    'tab.remote': 'Controle remoto',
+    'tab.menu': 'Menu',
+    'tab.login': 'Entrar',
+    'install.tabs': 'Método de instalação',
+    'keys.try': 'aperte uma no seu teclado e veja a tecla acender',
     'features.title': 'Tudo o que um teleprompter precisa',
     'features.lead': 'Simples de usar, minimalista e feito para gravar vídeos.',
     'f.markdown.t': 'Roteiros em Markdown',
@@ -49,7 +90,6 @@
     'install.copy': 'Copiar',
     'install.copied': 'Copiado!',
     'install.open': 'Depois abra http://SEU-SERVIDOR:3000 e crie a senha de administrador no primeiro acesso.',
-    'install.run': 'Prefere um comando só?',
     'install.https': 'Dica: atrás de um proxy reverso com HTTPS você também ganha o Wake Lock nativo do navegador e tela cheia sem restrições.',
     'keys.title': 'Atalhos padrão',
     'keys.lead': 'Todos podem ser trocados, inclusive por botões de controles Bluetooth e gamepads.',
@@ -75,6 +115,8 @@
   const nodes = [...document.querySelectorAll('[data-i18n]')];
   for (const el of nodes) english.set(el, el.textContent);
   const original = { title: document.title, description: document.querySelector('meta[name=description]').content };
+  const labelled = [...document.querySelectorAll('[data-i18n-aria]')];
+  const englishLabels = new Map(labelled.map((el) => [el, el.getAttribute('aria-label')]));
   let current = 'en';
   let copiedLabel = 'Copied!';
 
@@ -82,6 +124,7 @@
     current = lang === 'pt' ? 'pt' : 'en';
     document.documentElement.lang = current === 'pt' ? 'pt-BR' : 'en';
     for (const el of nodes) el.textContent = current === 'pt' ? (PT[el.dataset.i18n] ?? english.get(el)) : english.get(el);
+    for (const el of labelled) el.setAttribute('aria-label', current === 'pt' ? (PT[el.dataset.i18nAria] ?? englishLabels.get(el)) : englishLabels.get(el));
     document.title = current === 'pt' ? META.pt.title : original.title;
     document.querySelector('meta[name=description]').content = current === 'pt' ? META.pt.description : original.description;
     for (const img of document.querySelectorAll('img[data-shot]')) img.src = `assets/screens/${current}-${img.dataset.shot}.png`;
@@ -108,14 +151,24 @@
 
   for (const btn of document.querySelectorAll('[data-lang]')) btn.addEventListener('click', () => apply(btn.dataset.lang));
 
+  // O rótulo troca atrás de um desfoque curto, para parecer um só botão mudando de estado.
   for (const btn of document.querySelectorAll('[data-copy]')) {
+    const label = btn.querySelector('span');
+    let timer;
+    const swap = (done) => {
+      btn.classList.add('swapping');
+      timer = setTimeout(() => {
+        label.textContent = done ? copiedLabel : (current === 'pt' ? PT['install.copy'] : english.get(label));
+        btn.classList.toggle('done', done);
+        btn.classList.remove('swapping');
+        if (done) timer = setTimeout(() => swap(false), 1500);
+      }, 120);
+    };
     btn.addEventListener('click', async () => {
-      const text = document.getElementById(btn.dataset.copy).textContent;
       try {
-        await navigator.clipboard.writeText(text);
-        const label = btn.textContent;
-        btn.textContent = copiedLabel;
-        setTimeout(() => { btn.textContent = label; }, 1500);
+        await navigator.clipboard.writeText(document.getElementById(btn.dataset.copy).textContent);
+        clearTimeout(timer);
+        swap(true);
       } catch {
         /* sem permissão para a área de transferência */
       }
